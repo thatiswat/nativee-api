@@ -5,6 +5,7 @@ client = Groq(
     api_key=GROQ_API_KEY
 )
 
+
 async def speech_to_text(
     audio_path: str
 ):

@@ -10,9 +10,7 @@ app = FastAPI(
     version="0.1.0"
 )
 
-# ----------------------------------
 # CORS
-# ----------------------------------
 
 app.add_middleware(
     CORSMiddleware,
@@ -28,15 +26,11 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-# ----------------------------------
-# ROUTES
-# ----------------------------------
+# Routes
 
 app.include_router(router)
 
-# ----------------------------------
-# ROOT
-# ----------------------------------
+# Root
 
 @app.get("/")
 async def root():
@@ -46,14 +40,16 @@ async def root():
         "product": "iSpeak"
     }
 
-# ----------------------------------
-# AUDIO FILES
-# ----------------------------------
+# Serve audio files
 
 @app.get("/audio/{filename}")
-async def get_audio(filename: str):
+async def get_audio(
+    filename: str
+):
 
-    file_path = UPLOAD_DIR / filename
+    file_path = (
+        UPLOAD_DIR / filename
+    )
 
     return FileResponse(
         file_path,
