@@ -1,0 +1,25 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment variables
+.env
+
+# Uploads / user files
+uploads/
+
+# Frontend (Next.js)
+frontend/.next/
+frontend/node_modules/
+
+# Node (if any root usage)
+node_modules/
+
+# OS files
+.DS_Store
+
+# Logs
+*.log
