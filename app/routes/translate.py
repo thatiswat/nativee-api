@@ -5,8 +5,12 @@ from app.schemas.translate import (
     TranslateResponse,
 )
 
-from app.services.translator import translate_text
-from app.services.tts import text_to_speech
+from app.services.translator import (
+    translate_text,
+)
+from app.services.tts import (
+    text_to_speech,
+)
 
 router = APIRouter()
 
@@ -18,21 +22,21 @@ router = APIRouter()
 async def translate(
     request: TranslateRequest,
 ):
-    translated = await translate_text(
+    translated_text = await translate_text(
         request.text,
         request.source_language,
         request.target_language,
     )
 
-    audio = await text_to_speech(
-        translated,
+    audio_path = await text_to_speech(
+        translated_text,
         request.target_language,
     )
 
-    filename = audio.split("/")[-1]
+    filename = audio_path.split("/")[-1]
 
-    return {
-        "original": request.text,
-        "translated": translated,
-        "audio_url": f"/audio/{filename}",
-    }
+    return TranslateResponse(
+        original=request.text,
+        translated=translated_text,
+        audio_url=f"/audio/{filename}",
+    )
