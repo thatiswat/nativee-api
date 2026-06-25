@@ -10,7 +10,7 @@ from fastapi import (
 )
 
 from app.services.stt import speech_to_text
-from app.services.translate import translate_text
+from app.services.translator import translate_text
 from app.services.tts import text_to_speech
 
 from app.config import UPLOAD_DIR

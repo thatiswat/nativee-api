@@ -1,4 +1,6 @@
-.env
 venv/
-uploads/
 __pycache__/
+uploads/
+.env
+.DS_Store
+*.pyc

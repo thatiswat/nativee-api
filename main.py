@@ -2,56 +2,51 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
-from app.routes.conversation import router
+from app.routes.speech import router as conversation_router
+from app.routes.translate import router as translate_router
+
 from app.config import UPLOAD_DIR
 
 app = FastAPI(
-    title="iSpeak API",
-    version="0.1.0"
+    title="Nativee API",
+    version="1.0.0",
 )
-
-# CORS
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
-        "https://ispeak-frontend.vercel.app",
-        "https://1speak.in",
-        "https://www.1speak.in",
+
+        # Web
+        "https://nativeee.vercel.app",   # replace with your Vercel domain
+        "https://nativeee.com",
+        "https://www.nativeee.com",
     ],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
 # Routes
-
-app.include_router(router)
-
-# Root
+app.include_router(conversation_router)
+app.include_router(translate_router)
 
 @app.get("/")
 async def root():
-
     return {
         "status": "running",
-        "product": "iSpeak"
+        "product": "Nativee",
+        "version": "1.0.0",
     }
 
-# Serve audio files
 
 @app.get("/audio/{filename}")
-async def get_audio(
-    filename: str
-):
+async def get_audio(filename: str):
 
-    file_path = (
-        UPLOAD_DIR / filename
-    )
+    file_path = UPLOAD_DIR / filename
 
     return FileResponse(
         file_path,
-        media_type="audio/mpeg"
+        media_type="audio/mpeg",
     )
