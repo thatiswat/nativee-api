@@ -1,6 +1,8 @@
 from pathlib import Path
+import os
 import shutil
 import time
+import uuid
 
 from fastapi import (
     APIRouter,
@@ -24,23 +26,31 @@ async def conversation(
     source_language: str = Form(...),
     target_language: str = Form(...),
 ):
-    # Start total timer
+    # Total timer
     request_start = time.perf_counter()
 
     # Save uploaded audio
     save_start = time.perf_counter()
 
-    audio_path = UPLOAD_DIR / audio.filename
+    # Generate a unique filename to avoid collisions.
+    extension = Path(audio.filename).suffix or ".m4a"
+    audio_path = UPLOAD_DIR / f"{uuid.uuid4()}{extension}"
 
     with open(audio_path, "wb") as buffer:
         shutil.copyfileobj(audio.file, buffer)
+        buffer.flush()
 
     save_time = time.perf_counter() - save_start
 
     # Speech to Text
     stt_start = time.perf_counter()
 
-    original = await speech_to_text(str(audio_path))
+    try:
+        original = await speech_to_text(str(audio_path))
+    finally:
+        # Delete uploaded recording immediately after STT.
+        if os.path.exists(audio_path):
+            os.remove(audio_path)
 
     stt_time = time.perf_counter() - stt_start
 
@@ -65,10 +75,9 @@ async def conversation(
 
     tts_time = time.perf_counter() - tts_start
 
-    # Total request time
     total_time = time.perf_counter() - request_start
 
-    filename = Path(audio_output).name
+    filename = os.path.basename(audio_output)
 
     print("\n========== Nativeee Performance ==========")
     print(f"Save         : {save_time:.3f}s")
