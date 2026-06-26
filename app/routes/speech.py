@@ -26,13 +26,17 @@ async def conversation(
     source_language: str = Form(...),
     target_language: str = Form(...),
 ):
-    # Total timer
-    request_start = time.perf_counter()
+    # ==========================================
+    # Nativeee Benchmark
+    # ==========================================
 
-    # Save uploaded audio
+    backend_start = time.perf_counter()
+
+    # -------------------------
+    # Save Upload
+    # -------------------------
     save_start = time.perf_counter()
 
-    # Generate a unique filename to avoid collisions.
     extension = Path(audio.filename).suffix or ".m4a"
     audio_path = UPLOAD_DIR / f"{uuid.uuid4()}{extension}"
 
@@ -42,19 +46,22 @@ async def conversation(
 
     save_time = time.perf_counter() - save_start
 
-    # Speech to Text
+    # -------------------------
+    # Speech To Text
+    # -------------------------
     stt_start = time.perf_counter()
 
     try:
         original = await speech_to_text(str(audio_path))
     finally:
-        # Delete uploaded recording immediately after STT.
         if os.path.exists(audio_path):
             os.remove(audio_path)
 
     stt_time = time.perf_counter() - stt_start
 
+    # -------------------------
     # Translation
+    # -------------------------
     translation_start = time.perf_counter()
 
     translated = await translate_text(
@@ -65,7 +72,9 @@ async def conversation(
 
     translation_time = time.perf_counter() - translation_start
 
-    # Text to Speech
+    # -------------------------
+    # Text To Speech
+    # -------------------------
     tts_start = time.perf_counter()
 
     audio_output = await text_to_speech(
@@ -75,26 +84,36 @@ async def conversation(
 
     tts_time = time.perf_counter() - tts_start
 
-    total_time = time.perf_counter() - request_start
+    # -------------------------
+    # Backend Total
+    # -------------------------
+    backend_total = time.perf_counter() - backend_start
 
     filename = os.path.basename(audio_output)
 
-    print("\n========== Nativeee Performance ==========")
-    print(f"Save         : {save_time:.3f}s")
-    print(f"STT          : {stt_time:.3f}s")
-    print(f"Translation  : {translation_time:.3f}s")
-    print(f"TTS          : {tts_time:.3f}s")
-    print("------------------------------------------")
-    print(f"TOTAL        : {total_time:.3f}s")
-    print("==========================================\n")
+    print()
+    print("=======================================================")
+    print("              🚀 Nativeee Backend Benchmark")
+    print("=======================================================")
+    print(f"💾 Save Upload      : {save_time:.3f}s")
+    print(f"🧠 Speech To Text   : {stt_time:.3f}s")
+    print(f"🌍 Translation      : {translation_time:.3f}s")
+    print(f"🔊 Text To Speech   : {tts_time:.3f}s")
+    print("-------------------------------------------------------")
+    print(f"⚙️ Backend Total    : {backend_total:.3f}s")
+    print("=======================================================")
+    print()
 
     return {
         "original": original,
         "translated": translated,
         "audio_url": f"/audio/{filename}",
-        "save_time": round(save_time, 3),
-        "stt_time": round(stt_time, 3),
-        "translation_time": round(translation_time, 3),
-        "tts_time": round(tts_time, 3),
-        "total_time": round(total_time, 3),
+
+        "metrics": {
+            "save": round(save_time, 3),
+            "stt": round(stt_time, 3),
+            "translation": round(translation_time, 3),
+            "tts": round(tts_time, 3),
+            "backend_total": round(backend_total, 3),
+        },
     }
