@@ -1,9 +1,16 @@
 import time
 import uuid
+from pathlib import Path
 
 import edge_tts
+from fastapi import HTTPException
 
 from app.config import UPLOAD_DIR
+
+
+# ==========================================================
+# Voice Mapping
+# ==========================================================
 
 VOICE_MAP = {
     "en": "en-IN-NeerjaNeural",
@@ -14,35 +21,67 @@ VOICE_MAP = {
     "ml": "ml-IN-SobhanaNeural",
 }
 
+DEFAULT_VOICE = "en-IN-NeerjaNeural"
+
+
+# ==========================================================
+# Text To Speech
+# ==========================================================
 
 async def text_to_speech(
     text: str,
     language: str,
-):
-    # Start TTS timer
-    start = time.perf_counter()
+) -> str:
+    """
+    Generate speech using Edge TTS.
 
-    output_file = (
-        UPLOAD_DIR /
-        f"{uuid.uuid4()}.mp3"
-    )
+    Returns
+    -------
+    Path to generated MP3.
+    """
+
+    start = time.perf_counter()
 
     voice = VOICE_MAP.get(
         language,
-        "en-IN-NeerjaNeural",
+        DEFAULT_VOICE,
     )
 
-    communicate = edge_tts.Communicate(
-        text=text,
-        voice=voice,
+    output_file = (
+        UPLOAD_DIR /
+        f"{uuid.uuid4().hex}.mp3"
     )
 
-    await communicate.save(
-        str(output_file)
-    )
+    try:
 
-    tts_only = time.perf_counter() - start
+        communicate = edge_tts.Communicate(
+            text=text.strip(),
+            voice=voice,
+        )
 
-    print(f"🔊 edge-tts only : {tts_only:.3f}s")
+        await communicate.save(
+            str(output_file)
+        )
 
-    return str(output_file)
+        elapsed = (
+            time.perf_counter()
+            - start
+        )
+
+        print(
+            f"🔊 Edge TTS : {elapsed:.3f}s"
+        )
+
+        return str(output_file)
+
+    except Exception as exc:
+
+        if output_file.exists():
+            output_file.unlink(
+                missing_ok=True,
+            )
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"TTS failed: {exc}",
+        )
