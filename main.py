@@ -41,7 +41,6 @@ async def lifespan(app: FastAPI):
             max_keepalive_connections=20,
             max_connections=100,
         ),
-        http2=True,
     )
 
     yield
@@ -147,12 +146,13 @@ async def get_audio(filename: str):
         )
 
     async def cleanup():
-        # Allow the client time to finish downloading.
+        # Allow the client enough time to finish downloading.
         await asyncio.sleep(10)
 
-        # Delete generated audio.
+        # Delete the generated MP3.
         file_path.unlink(missing_ok=True)
 
+    # Schedule cleanup without blocking the response.
     asyncio.create_task(cleanup())
 
     return FileResponse(
