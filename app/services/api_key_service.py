@@ -1,4 +1,4 @@
-from app.core.security import (
+from app.utils.crypto import (
     generate_api_key,
     hash_api_key,
 )

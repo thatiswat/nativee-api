@@ -1,11 +1,15 @@
 from fastapi import (
     APIRouter,
-    UploadFile,
+    Depends,
     File,
     Form,
     Request,
+    UploadFile,
 )
 
+from sqlalchemy.orm import Session
+
+from app.database.dependencies import get_db
 from app.services.conversation_service import ConversationService
 
 router = APIRouter()
@@ -20,14 +24,18 @@ conversation_service = ConversationService()
 @router.post("/conversation")
 async def conversation(
     request: Request,
+    db: Session = Depends(get_db),
     audio: UploadFile = File(...),
     source_language: str = Form(...),
     target_language: str = Form(...),
 ):
     request_id = request.state.id
+    context = request.state.context
 
     return await conversation_service.process(
+        db=db,
         request_id=request_id,
+        context=context,
         audio=audio,
         source_language=source_language,
         target_language=target_language,

@@ -1,35 +1,56 @@
-import hashlib
-import secrets
+from fastapi import (
+    Depends,
+    Header,
+    HTTPException,
+)
+from sqlalchemy.orm import Session
 
-PREFIX_LIVE = "ntv_live_"
-PREFIX_TEST = "ntv_test_"
+from app.database.dependencies import get_db
+from app.repositories.api_key_repository import APIKeyRepository
+from app.utils.crypto import hash_api_key
 
 
-def generate_api_key(live: bool = True) -> str:
+async def require_api_key(
+    authorization: str = Header(None),
+    db: Session = Depends(get_db),
+):
     """
-    Generate a secure Nativeee API key.
+    Authenticate requests using a Bearer API key.
+
+    Expected header:
+
+        Authorization: Bearer <api_key>
     """
 
-    prefix = PREFIX_LIVE if live else PREFIX_TEST
+    if not authorization:
+        raise HTTPException(
+            status_code=401,
+            detail="Missing Authorization header",
+        )
 
-    token = secrets.token_urlsafe(32)
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid Authorization header",
+        )
 
-    return f"{prefix}{token}"
+    api_key = authorization.replace("Bearer ", "", 1)
 
+    key_hash = hash_api_key(api_key)
 
-def hash_api_key(api_key: str) -> str:
-    """
-    Hash an API key before storing it.
-    """
+    repository = APIKeyRepository(db)
+    record = repository.get_by_hash(key_hash)
 
-    return hashlib.sha256(
-        api_key.encode("utf-8")
-    ).hexdigest()
+    if record is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid API Key",
+        )
 
+    if not record.active:
+        raise HTTPException(
+            status_code=403,
+            detail="API Key Disabled",
+        )
 
-def verify_api_key(
-    api_key: str,
-    stored_hash: str,
-) -> bool:
-
-    return hash_api_key(api_key) == stored_hash
+    return record

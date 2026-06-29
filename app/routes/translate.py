@@ -1,11 +1,18 @@
-from fastapi import APIRouter
+from fastapi import (
+    APIRouter,
+    Depends,
+)
+
+from app.core.security import require_api_key
 
 from app.schemas.translate import (
     TranslateRequest,
     TranslateResponse,
 )
 
-from app.router.translation_router import translate
+from app.providers.registry import (
+    ProviderRegistry,
+)
 from app.providers.edge_provider import text_to_speech
 
 router = APIRouter()
@@ -17,8 +24,9 @@ router = APIRouter()
 )
 async def translate_endpoint(
     request: TranslateRequest,
+    api_key: str = Depends(require_api_key),
 ):
-    translated_text = await translate(
+    translated_text = await ProviderRegistry.translate(
         request.text,
         request.source_language,
         request.target_language,

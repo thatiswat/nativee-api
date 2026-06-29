@@ -12,10 +12,12 @@ from fastapi import (
 )
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.openapi.utils import get_openapi
 from fastapi.responses import (
     FileResponse,
     ORJSONResponse,
 )
+from fastapi.security import HTTPBearer
 
 from app.api.v1 import router as api_router
 from app.core.logger import logger
@@ -23,6 +25,7 @@ from app.core.settings import (
     UPLOAD_DIR,
     GROQ_API_KEY,
 )
+from app.middleware.auth import AuthenticationMiddleware
 
 
 # ---------------------------------------------------------------------
@@ -69,6 +72,16 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+bearer_scheme = HTTPBearer(
+    bearerFormat="API Key",
+    scheme_name="BearerAuth",
+    description=(
+        "Paste your Nativee API Key.\n\n"
+        "Example:\n"
+        "Bearer ntv_live_xxxxxxxxxxxxxxxxx"
+    ),
+)
+
 logger.info("Nativee API Started")
 
 
@@ -81,8 +94,6 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
-
-        # Web
         "https://nativee.vercel.app",
         "https://nativee.com",
         "https://www.nativee.com",
@@ -95,6 +106,10 @@ app.add_middleware(
 app.add_middleware(
     GZipMiddleware,
     minimum_size=1000,
+)
+
+app.add_middleware(
+    AuthenticationMiddleware,
 )
 
 
@@ -157,13 +172,9 @@ async def get_audio(filename: str):
         )
 
     async def cleanup():
-        # Allow the client enough time to finish downloading.
         await asyncio.sleep(10)
-
-        # Delete the generated MP3.
         file_path.unlink(missing_ok=True)
 
-    # Schedule cleanup without blocking the response.
     asyncio.create_task(cleanup())
 
     return FileResponse(
@@ -171,3 +182,43 @@ async def get_audio(filename: str):
         media_type="audio/mpeg",
         filename=file_path.name,
     )
+
+
+# ---------------------------------------------------------------------
+# OpenAPI
+# ---------------------------------------------------------------------
+
+def custom_openapi():
+
+    if app.openapi_schema:
+        return app.openapi_schema
+
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description="Nativee Platform API",
+        routes=app.routes,
+    )
+
+    openapi_schema.setdefault("components", {})
+    openapi_schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "API Key",
+        }
+    }
+
+    for path in openapi_schema["paths"].values():
+        for operation in path.values():
+            if isinstance(operation, dict):
+                operation["security"] = [
+                    {"BearerAuth": []}
+                ]
+
+    app.openapi_schema = openapi_schema
+
+    return app.openapi_schema
+
+
+app.openapi = custom_openapi
