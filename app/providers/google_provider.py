@@ -6,21 +6,24 @@ from deep_translator import GoogleTranslator
 
 
 # ==========================================================
-# Translator
+# Config
 # ==========================================================
 
 SOURCE_LANGUAGE = "auto"
 
 
 # ==========================================================
-# Translation Cache
+# Internal Cached Translator
 # ==========================================================
 
 @lru_cache(maxsize=2048)
-def cached_translate(
+def _cached_translate(
     text: str,
     target_language: str,
 ) -> str:
+    """
+    Cached Google translation call.
+    """
 
     return GoogleTranslator(
         source=SOURCE_LANGUAGE,
@@ -29,53 +32,40 @@ def cached_translate(
 
 
 # ==========================================================
-# Translation
+# Provider (PLATFORM STYLE)
 # ==========================================================
 
-async def translate_text(
-    text: str,
-    source_language: str,
-    target_language: str,
-) -> str:
+class GoogleProvider:
     """
-    Translate text.
+    Google Translation Provider
 
-    Args:
-        text:
-            Original text.
-
-        source_language:
-            Reserved for future models
-            (IndicTrans / NLLB / AI4Bharat)
-
-        target_language:
-            Target language.
-
-    Returns
-    -------
-        Translated text.
+    Wrapped as a class so it can be registered
+    inside ProviderRegistry.
     """
 
-    start = time.perf_counter()
+    async def translate(
+        self,
+        text: str,
+        source_language: str,
+        target_language: str,
+    ) -> str:
 
-    try:
+        start = time.perf_counter()
 
-        translated = cached_translate(
-            text.strip(),
-            target_language,
-        )
+        try:
+            translated = _cached_translate(
+                text.strip(),
+                target_language,
+            )
 
-        elapsed = time.perf_counter() - start
+            elapsed = time.perf_counter() - start
 
-        print(
-            f"🌍 Translation : {elapsed:.3f}s"
-        )
+            print(f"🌍 Translation : {elapsed:.3f}s")
 
-        return translated
+            return translated
 
-    except Exception as exc:
-
-        raise HTTPException(
-            status_code=500,
-            detail=f"Translation failed: {exc}",
-        )
+        except Exception as exc:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Translation failed: {exc}",
+            )

@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 from sqlalchemy.orm import Session
 
+from app.models.api_key import APIKey
 from app.models.usage_log import UsageLog
 
 
@@ -12,9 +13,14 @@ class RateLimitService:
 
     def is_allowed(
         self,
-        api_key_id: int,
-        limit: int = 10,
-    ) -> bool:
+        api_key: APIKey,
+    ) -> dict:
+        """
+        Check whether an API key is within its
+        requests-per-minute limit.
+        """
+
+        limit = api_key.plan.requests_per_minute
 
         one_minute_ago = (
             datetime.utcnow()
@@ -24,10 +30,19 @@ class RateLimitService:
         requests = (
             self.db.query(UsageLog)
             .filter(
-                UsageLog.api_key_id == api_key_id,
+                UsageLog.api_key_id == api_key.id,
                 UsageLog.created_at >= one_minute_ago,
             )
             .count()
         )
 
-        return requests < limit
+        remaining = max(
+            0,
+            limit - requests,
+        )
+
+        return {
+            "allowed": requests < limit,
+            "remaining": remaining,
+            "limit": limit,
+        }

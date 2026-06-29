@@ -1,6 +1,8 @@
 # Nativeee Platform Architecture
 
-## Philosophy
+---
+
+# Philosophy
 
 Nativeee follows a layered architecture.
 
@@ -9,7 +11,11 @@ Client
 
 ↓
 
-Middleware
+Authentication Middleware
+
+↓
+
+Platform Middleware
 
 ↓
 
@@ -21,78 +27,183 @@ Services
 
 ↓
 
-Pipelines
-
-↓
-
-Providers
-
-↓
-
 Repositories
 
 ↓
 
 Database
+
+↓
+
+AI Providers
 ```
 
-Every layer has one responsibility.
+Each layer owns exactly one responsibility.
 
 ---
 
-## Folder Structure
+# Platform Architecture
 
+```
+                    Nativeee Platform
+
+            Mobile        Web        SDK
+                │
+                ▼
+      Authentication Middleware
+                │
+                ▼
+          Request Context
+                │
+                ▼
+        Dynamic Rate Limiting
+                │
+                ▼
+              Routes
+                │
+                ▼
+             Services
+                │
+                ▼
+        Provider Registry
+                │
+      ┌─────────┴─────────┐
+      ▼                   ▼
+ Groq Whisper      Google Provider
+                          │
+                          ▼
+                     Edge TTS
+                │
+                ▼
+          Usage Logging
+                │
+                ▼
+           PostgreSQL
+```
+
+---
+
+# Folder Structure
+
+```
 app/
 
 api/
-
 core/
-
 database/
-
 middleware/
-
 models/
-
-pipelines/
-
 providers/
-
 repositories/
-
 routes/
-
 schemas/
-
 services/
-
 utils/
+```
 
 ---
 
-## Request Flow
+# Layer Responsibilities
 
-Conversation
+## Middleware
+
+Responsible for
+
+- Authentication
+- Rate Limiting
+- Request Context
+
+---
+
+## Routes
+
+Responsible for
+
+- HTTP
+- Request Validation
+- Response Models
+
+Routes never contain SQL or business logic.
+
+---
+
+## Services
+
+Responsible for business logic.
+
+Current Services
+
+- APIKeyService
+- PlanService
+- UsageService
+- IdentityService
+- DashboardService
+
+---
+
+## Repositories
+
+Responsible for database access.
+
+Current Repositories
+
+- APIKeyRepository
+- PlanRepository
+- UsageRepository
+
+---
+
+## Providers
+
+Responsible for external AI integrations.
+
+Current Providers
+
+- Groq Whisper
+- Google Translation
+- Edge TTS
+
+---
+
+## Schemas
+
+Responsible for API contracts.
+
+Current Schemas
+
+- MeResponse
+- UsageSummaryResponse
+- DashboardResponse
+
+---
+
+# Request Lifecycle
+
+Conversation Request
 
 ↓
 
-Authentication
+Authentication Middleware
 
 ↓
 
-Rate Limit
+API Key Lookup
 
 ↓
 
-Conversation Route
+Plan Resolution
 
 ↓
 
-Conversation Service
+Dynamic Rate Limiting
 
 ↓
 
-Conversation Pipeline
+Business Route
+
+↓
+
+Business Service
 
 ↓
 
@@ -100,15 +211,7 @@ Provider Registry
 
 ↓
 
-Groq
-
-↓
-
-Translation Provider
-
-↓
-
-Edge TTS
+Speech / Translation / TTS
 
 ↓
 
@@ -117,3 +220,63 @@ Usage Logging
 ↓
 
 Response
+
+---
+
+# Developer APIs
+
+Identity
+
+GET /v1/me
+
+Usage
+
+GET /v1/usage
+
+Dashboard
+
+GET /v1/dashboard
+
+Plans
+
+GET /v1/plans
+
+API Keys
+
+POST /v1/api-keys
+
+---
+
+# Engineering Principles
+
+- Repository Pattern
+- Service Layer
+- Provider Abstraction
+- Thin Routes
+- Typed Response Schemas
+- Dependency Injection
+- Single Responsibility Principle
+
+---
+
+# Current Status
+
+Platform Foundation
+
+✅ Complete
+
+Developer Platform
+
+✅ Complete
+
+Platform Intelligence
+
+🚧 In Progress
+
+Commercial Platform
+
+⏳ Planned
+
+Enterprise Platform
+
+⏳ Planned

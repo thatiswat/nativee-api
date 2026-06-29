@@ -1,60 +1,81 @@
 # Nativeee Platform Roadmap
 
-## Phase 1
+---
 
-✅ Foundation
+# Phase 1 — Platform Foundation ✅
 
-- Authentication
+Completed
+
+## Identity
+
 - API Keys
+- Authentication Middleware
+- Plans
+- Identity API
+
+## Traffic Control
+
+- Dynamic Rate Limiting
+
+## Observability
+
 - Usage Logging
-- Analytics
-- Rate Limiting
-- PostgreSQL
-- Provider Registry
-
-Completed.
-
----
-
-## Phase 2
-
-Platform
-
+- Usage API
 - Dashboard API
+
+## AI Runtime
+
+- Provider Registry
+- Groq Whisper
+- Google Translation
+- Edge TTS
+
+---
+
+# Phase 2 — Platform Intelligence 🚧
+
+In Progress
+
+- Monthly Quota Enforcement
+- Analytics API
 - API Key Rotation
-- Dynamic Plans
-- Billing Foundation
+- Performance Metrics
+- Request Metrics
 
 ---
 
-## Phase 3
+# Phase 3 — Commercial Platform
 
-Developer Portal
+Planned
 
-- Dashboard
-- Documentation
-- Analytics
-- Billing
-- API Keys
+- Billing Engine
+- Subscription Management
+- Payment Integration
+- Developer Dashboard
+- API Key Management
 
 ---
 
-## Phase 4
+# Phase 4 — AI Infrastructure
 
-AI Infrastructure
+Planned
 
-- GPU Translation
-- Streaming
+- AI4Bharat Provider
+- Nativeee Translation Engine
 - Auto Provider Routing
-- Benchmarks
+- Streaming
+- Provider Benchmarking
 
 ---
 
-## Phase 5
+# Phase 5 — Enterprise Platform
 
-Enterprise
+Future
 
 - Organizations
 - Teams
+- Multiple API Keys
 - Audit Logs
-- SLAs
+- Webhooks
+- SDK
+- SLA Management

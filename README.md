@@ -1,60 +1,105 @@
-# Nativeee API
+# Nativeee Platform
 
-> AI Language Platform powering Nativeee.
+> AI Language Platform powering Nativeee Mobile, Web, and the future Developer Platform.
 
 ---
 
 ## Overview
 
-Nativeee API is the backend platform that powers:
+Nativeee Platform is an AI infrastructure platform designed to remove language barriers through Speech, Translation and Voice technologies.
+
+The platform currently powers:
 
 - Nativeee Mobile
 - Nativeee Web
-- Future Developer Platform
-- Third-party integrations
+- Future Public Developer APIs
+- Enterprise Integrations
 
-Current AI Stack
+---
 
-- Groq Whisper (Speech-to-Text)
-- Translation Provider Registry
-- Edge TTS
+# Technology Stack
+
+## Backend
+
 - FastAPI
 - PostgreSQL
 - SQLAlchemy
+- Alembic
 - Railway
 
----
+## AI Runtime
 
-## Features
+- Groq Whisper (Speech-to-Text)
+- Google Translation Provider
+- Edge TTS
+- Provider Registry
+
+## Platform
 
 - API Key Authentication
-- Usage Analytics
-- Rate Limiting
-- Conversation Pipeline
+- Dynamic Plans
+- Dynamic Rate Limiting
+- Usage Logging
+- Developer Dashboard APIs
+
+---
+
+# Platform APIs
+
+## AI
+
+- Conversation API
+- Translation API
+
+## Developer Platform
+
+- GET /v1/me
+- GET /v1/usage
+- GET /v1/dashboard
+- GET /v1/plans
+- POST /v1/api-keys
+
+---
+
+# Current Features
+
+## Identity
+
+- API Keys
+- Authentication Middleware
+- Plans
+- Identity API
+
+## Traffic Control
+
+- Dynamic Rate Limiting
+- Plan Based Limits
+
+## Observability
+
+- Usage Logging
+- Usage API
+- Dashboard API
+
+## AI Runtime
+
 - Provider Registry
-- Swagger Documentation
-- Structured Logging
-- Alembic Migrations
+- Groq STT
+- Google Translation
+- Edge TTS
 
 ---
 
-## Architecture
+# Documentation
 
-See:
+See
 
-ARCHITECTURE.md
-
----
-
-## Roadmap
-
-See:
-
-ROADMAP.md
+- ARCHITECTURE.md
+- ROADMAP.md
 
 ---
 
-## Running locally
+# Run Locally
 
 ```bash
 python -m venv venv
@@ -68,12 +113,12 @@ uvicorn main:app --reload
 
 ---
 
-## Deployment
+# Deployment
 
-Production:
+Production
 
 Railway
 
-Future:
+Future
 
 api.nativeee.in

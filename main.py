@@ -7,8 +7,8 @@ import httpx
 
 from fastapi import (
     FastAPI,
-    Request,
     HTTPException,
+    Request,
 )
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -22,10 +22,12 @@ from fastapi.security import HTTPBearer
 from app.api.v1 import router as api_router
 from app.core.logger import logger
 from app.core.settings import (
-    UPLOAD_DIR,
     GROQ_API_KEY,
+    UPLOAD_DIR,
 )
+from app.database.session import SessionLocal
 from app.middleware.auth import AuthenticationMiddleware
+from app.services.plan_service import PlanService
 
 
 # ---------------------------------------------------------------------
@@ -45,7 +47,7 @@ else:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    Create shared resources once during startup.
+    Create shared resources and initialize the platform.
     """
 
     app.state.http = httpx.AsyncClient(
@@ -55,6 +57,18 @@ async def lifespan(app: FastAPI):
             max_connections=100,
         ),
     )
+
+    # ---------------------------------------------------------
+    # Platform Initialization
+    # ---------------------------------------------------------
+
+    db = SessionLocal()
+
+    try:
+        PlanService(db).seed_defaults()
+        logger.info("Default plans initialized.")
+    finally:
+        db.close()
 
     yield
 
@@ -201,6 +215,7 @@ def custom_openapi():
     )
 
     openapi_schema.setdefault("components", {})
+
     openapi_schema["components"]["securitySchemes"] = {
         "BearerAuth": {
             "type": "http",
@@ -213,7 +228,9 @@ def custom_openapi():
         for operation in path.values():
             if isinstance(operation, dict):
                 operation["security"] = [
-                    {"BearerAuth": []}
+                    {
+                        "BearerAuth": []
+                    }
                 ]
 
     app.openapi_schema = openapi_schema

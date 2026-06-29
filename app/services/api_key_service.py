@@ -1,3 +1,5 @@
+from fastapi import HTTPException
+
 from app.utils.crypto import (
     generate_api_key,
     hash_api_key,
@@ -5,6 +7,7 @@ from app.utils.crypto import (
 
 from app.models.api_key import APIKey
 from app.repositories.api_key_repository import APIKeyRepository
+from app.repositories.plan_repository import PlanRepository
 from app.schemas.api_key import CreateAPIKeyResponse
 
 
@@ -15,38 +18,57 @@ class APIKeyService:
         db,
         name: str,
         live: bool = True,
+        plan_id: int = 1,
     ):
         """
         Create a Nativeee API Key.
 
-        The plaintext key is returned only once.
-        Only the SHA256 hash is stored in the database.
+        - Validates plan
+        - Generates API key (returned only once)
+        - Stores only hashed version
         """
 
-        # 1. Generate plaintext API key
-        api_key = generate_api_key(
-            live=live,
-        )
+        # ---------------------------------------
+        # 1. Validate plan exists (business rule)
+        # ---------------------------------------
+        plan_repo = PlanRepository(db)
+        plan = plan_repo.get(plan_id)
 
-        # 2. Hash it
-        key_hash = hash_api_key(
-            api_key,
-        )
+        if not plan:
+            raise HTTPException(
+                status_code=404,
+                detail="Plan not found",
+            )
 
-        # 3. Create model instance (not yet persisted)
+        # ---------------------------------------
+        # 2. Generate API key
+        # ---------------------------------------
+        api_key = generate_api_key(live=live)
+
+        # ---------------------------------------
+        # 3. Hash API key
+        # ---------------------------------------
+        key_hash = hash_api_key(api_key)
+
+        # ---------------------------------------
+        # 4. Create model
+        # ---------------------------------------
         record = APIKey(
             name=name,
             key_hash=key_hash,
             active=True,
+            plan_id=plan_id,
         )
 
-        # 4. Persist using repository layer
-        record = APIKeyRepository.create(
-            db,
-            record,
-        )
+        # ---------------------------------------
+        # 5. Persist (repository instance)
+        # ---------------------------------------
+        repository = APIKeyRepository(db)
+        record = repository.create(record)
 
-        # 5. Return the response schema
+        # ---------------------------------------
+        # 6. Response
+        # ---------------------------------------
         return CreateAPIKeyResponse(
             id=record.id,
             name=record.name,
