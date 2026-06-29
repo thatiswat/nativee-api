@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy.orm import joinedload
 
 from app.models.api_key import APIKey
 
@@ -24,6 +25,9 @@ class APIKeyRepository:
     ):
         return (
             self.db.query(APIKey)
+            .options(
+                joinedload(APIKey.plan)
+            )
             .filter(APIKey.key_hash == key_hash)
             .first()
         )

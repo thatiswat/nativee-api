@@ -1,5 +1,4 @@
-from fastapi import APIRouter
-from fastapi import Depends
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.database.dependencies import get_db
@@ -29,4 +28,5 @@ def create_key(
         db=db,
         name=request.name,
         live=request.live,
+        plan_id=request.plan_id,  # ✅ added
     )

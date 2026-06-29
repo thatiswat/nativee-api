@@ -1,20 +1,15 @@
-from datetime import datetime
-
 from sqlalchemy import Boolean
-from sqlalchemy import DateTime
-from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
 
 from app.database.base import Base
 
 
-class APIKey(Base):
-    __tablename__ = "api_keys"
+class Plan(Base):
+    __tablename__ = "plans"
 
     id: Mapped[int] = mapped_column(
         Integer,
@@ -23,19 +18,18 @@ class APIKey(Base):
 
     name: Mapped[str] = mapped_column(
         String(100),
-        nullable=False,
-    )
-
-    key_hash: Mapped[str] = mapped_column(
-        String(255),
         unique=True,
         nullable=False,
     )
 
-    plan_id: Mapped[int] = mapped_column(
-        ForeignKey("plans.id"),
+    requests_per_minute: Mapped[int] = mapped_column(
+        Integer,
         nullable=False,
-        default=1,
+    )
+
+    requests_per_month: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
     )
 
     active: Mapped[bool] = mapped_column(
@@ -43,12 +37,7 @@ class APIKey(Base):
         default=True,
     )
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-    )
-
-    plan = relationship(
-        "Plan",
-        back_populates="api_keys",
+    api_keys = relationship(
+        "APIKey",
+        back_populates="plan",
     )
