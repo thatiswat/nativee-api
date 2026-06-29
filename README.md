@@ -1,4 +1,4 @@
-# Nativeee Platform
+# Nativee Platform
 
 > AI Language Platform powering Nativeee Mobile, Web, and the future Developer Platform.
 
@@ -6,12 +6,12 @@
 
 ## Overview
 
-Nativeee Platform is an AI infrastructure platform designed to remove language barriers through Speech, Translation and Voice technologies.
+Nativee Platform is an AI infrastructure platform designed to remove language barriers through Speech, Translation and Voice technologies.
 
 The platform currently powers:
 
-- Nativeee Mobile
-- Nativeee Web
+- Nativee Mobile
+- Nativee Web
 - Future Public Developer APIs
 - Enterprise Integrations
 
@@ -121,4 +121,4 @@ Railway
 
 Future
 
-api.nativeee.in
+api.nativee.in
