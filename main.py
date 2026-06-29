@@ -1,4 +1,3 @@
-from pathlib import Path
 from contextlib import asynccontextmanager
 import asyncio
 import secrets
@@ -18,11 +17,22 @@ from fastapi.responses import (
     ORJSONResponse,
 )
 
-from app.routes.speech import router as conversation_router
-from app.routes.translate import router as translate_router
-from app.routes.stream import router as stream_router
+from app.api.v1 import router as api_router
+from app.core.logger import logger
+from app.core.settings import (
+    UPLOAD_DIR,
+    GROQ_API_KEY,
+)
 
-from app.config import UPLOAD_DIR
+
+# ---------------------------------------------------------------------
+# Startup Checks
+# ---------------------------------------------------------------------
+
+if GROQ_API_KEY:
+    logger.info("Groq provider configured.")
+else:
+    logger.warning("Groq API key missing.")
 
 
 # ---------------------------------------------------------------------
@@ -53,11 +63,13 @@ async def lifespan(app: FastAPI):
 # ---------------------------------------------------------------------
 
 app = FastAPI(
-    title="Nativeee API",
+    title="Nativee API",
     version="1.0.0",
     default_response_class=ORJSONResponse,
     lifespan=lifespan,
 )
+
+logger.info("Nativee API Started")
 
 
 # ---------------------------------------------------------------------
@@ -71,9 +83,9 @@ app.add_middleware(
         "http://127.0.0.1:3000",
 
         # Web
-        "https://nativeee.vercel.app",
-        "https://nativeee.com",
-        "https://www.nativeee.com",
+        "https://nativee.vercel.app",
+        "https://nativee.com",
+        "https://www.nativee.com",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -99,11 +111,12 @@ async def benchmark(request: Request, call_next):
     response.headers["X-Request-Time"] = f"{elapsed_ms:.2f}ms"
     response.headers["X-Request-ID"] = request.state.id
 
-    print(
-        f"[{request.state.id}] "
-        f"{request.method} "
-        f"{request.url.path} "
-        f"{elapsed_ms:.2f}ms"
+    logger.info(
+        "[%s] %s %s %.2fms",
+        request.state.id,
+        request.method,
+        request.url.path,
+        elapsed_ms,
     )
 
     return response
@@ -113,9 +126,7 @@ async def benchmark(request: Request, call_next):
 # Routes
 # ---------------------------------------------------------------------
 
-app.include_router(conversation_router)
-app.include_router(translate_router)
-app.include_router(stream_router)
+app.include_router(api_router)
 
 
 # ---------------------------------------------------------------------
@@ -126,7 +137,7 @@ app.include_router(stream_router)
 async def root():
     return {
         "status": "running",
-        "product": "Nativeee",
+        "product": "Nativee",
         "version": "1.0.0",
     }
 

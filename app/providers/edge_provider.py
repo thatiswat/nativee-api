@@ -1,16 +1,12 @@
 import time
 import uuid
-from pathlib import Path
 
 import edge_tts
 from fastapi import HTTPException
 
-from app.config import UPLOAD_DIR
+from app.core.settings import UPLOAD_DIR
+from app.core.logger import logger
 
-
-# ==========================================================
-# Voice Mapping
-# ==========================================================
 
 VOICE_MAP = {
     "en": "en-IN-NeerjaNeural",
@@ -24,21 +20,10 @@ VOICE_MAP = {
 DEFAULT_VOICE = "en-IN-NeerjaNeural"
 
 
-# ==========================================================
-# Text To Speech
-# ==========================================================
-
 async def text_to_speech(
     text: str,
     language: str,
 ) -> str:
-    """
-    Generate speech using Edge TTS.
-
-    Returns
-    -------
-    Path to generated MP3.
-    """
 
     start = time.perf_counter()
 
@@ -59,27 +44,19 @@ async def text_to_speech(
             voice=voice,
         )
 
-        await communicate.save(
-            str(output_file)
-        )
+        await communicate.save(str(output_file))
 
-        elapsed = (
-            time.perf_counter()
-            - start
-        )
+        elapsed = time.perf_counter() - start
 
-        print(
-            f"🔊 Edge TTS : {elapsed:.3f}s"
-        )
+        logger.info("Edge TTS %.3fs", elapsed)
 
         return str(output_file)
 
     except Exception as exc:
 
-        if output_file.exists():
-            output_file.unlink(
-                missing_ok=True,
-            )
+        output_file.unlink(missing_ok=True)
+
+        logger.exception("Edge TTS failed")
 
         raise HTTPException(
             status_code=500,

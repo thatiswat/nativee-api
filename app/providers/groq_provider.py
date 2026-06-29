@@ -1,46 +1,26 @@
 import time
-from pathlib import Path
 
 from groq import Groq
 from fastapi import HTTPException
 
-from app.config import GROQ_API_KEY
+from app.core.settings import GROQ_API_KEY
+from app.core.logger import logger
 
 
-# ==========================================================
-# Global Groq Client
-# ==========================================================
-
-client = Groq(
-    api_key=GROQ_API_KEY,
-)
+client = Groq(api_key=GROQ_API_KEY)
 
 MODEL = "whisper-large-v3"
 
 
-# ==========================================================
-# Speech To Text
-# ==========================================================
-
-async def speech_to_text(
-    audio_path: str,
-) -> str:
+async def speech_to_text(audio_path: str) -> str:
     """
     Convert speech to text using Groq Whisper.
-
-    Args:
-        audio_path: Path to audio file.
-
-    Returns:
-        Transcript string.
     """
 
     start = time.perf_counter()
 
     try:
-
         with open(audio_path, "rb") as audio_file:
-
             result = client.audio.transcriptions.create(
                 model=MODEL,
                 file=audio_file,
@@ -50,7 +30,7 @@ async def speech_to_text(
 
         elapsed = time.perf_counter() - start
 
-        print(f"🧠 Groq STT        : {elapsed:.3f}s")
+        logger.info("Groq STT %.3fs", elapsed)
 
         transcript = result.text.strip()
 
@@ -66,6 +46,8 @@ async def speech_to_text(
         raise
 
     except Exception as exc:
+        logger.exception("Groq STT failed")
+
         raise HTTPException(
             status_code=500,
             detail=f"Speech recognition failed: {exc}",

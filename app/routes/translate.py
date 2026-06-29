@@ -5,12 +5,8 @@ from app.schemas.translate import (
     TranslateResponse,
 )
 
-from app.services.translator import (
-    translate_text,
-)
-from app.services.tts import (
-    text_to_speech,
-)
+from app.router.translation_router import translate
+from app.providers.edge_provider import text_to_speech
 
 router = APIRouter()
 
@@ -19,10 +15,10 @@ router = APIRouter()
     "/translate",
     response_model=TranslateResponse,
 )
-async def translate(
+async def translate_endpoint(
     request: TranslateRequest,
 ):
-    translated_text = await translate_text(
+    translated_text = await translate(
         request.text,
         request.source_language,
         request.target_language,
