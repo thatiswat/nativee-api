@@ -3,7 +3,7 @@ from fastapi import (
     Depends,
 )
 
-from app.core.security import require_api_key
+from app.dependencies.auth import require_api_key
 from app.providers.edge_provider import text_to_speech
 from app.providers.registry import ProviderRegistry
 from app.schemas.error import ErrorResponse

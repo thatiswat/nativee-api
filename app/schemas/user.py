@@ -73,6 +73,24 @@ class UserResponse(BaseModel):
 
 
 # ==========================================================
+# Login Response
+# ==========================================================
+
+class LoginResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "access_token": "<jwt>",
+                "token_type": "bearer",
+            }
+        }
+    )
+
+
+# ==========================================================
 # Message
 # ==========================================================
 

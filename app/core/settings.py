@@ -32,3 +32,29 @@ TRANSLATION_PROVIDER = os.getenv(
     "TRANSLATION_PROVIDER",
     "google",
 ).strip().lower()
+
+# ==========================================================
+# JWT
+# ==========================================================
+
+JWT_SECRET_KEY = os.getenv(
+    "JWT_SECRET_KEY",
+    "",
+).strip()
+
+JWT_ALGORITHM = os.getenv(
+    "JWT_ALGORITHM",
+    "HS256",
+).strip()
+
+JWT_EXPIRE_MINUTES = int(
+    os.getenv(
+        "JWT_EXPIRE_MINUTES",
+        "60",
+    )
+)
+
+if not JWT_SECRET_KEY:
+    raise RuntimeError(
+        "JWT_SECRET_KEY is missing. Please set it in your environment variables."
+    )

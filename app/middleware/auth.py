@@ -13,18 +13,28 @@ from app.services.request_context_builder import (
 
 PUBLIC_ROUTES = {
     "/",
+    "/v1/health",
+}
+
+PUBLIC_PREFIXES = (
     "/docs",
     "/redoc",
     "/openapi.json",
-    "/v1/health",
-}
+    "/v1/auth",
+)
 
 
 class AuthenticationMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request, call_next):
 
-        if request.url.path in PUBLIC_ROUTES:
+        if (
+            request.url.path in PUBLIC_ROUTES
+            or any(
+                request.url.path.startswith(prefix)
+                for prefix in PUBLIC_PREFIXES
+            )
+        ):
             return await call_next(request)
 
         db = SessionLocal()
