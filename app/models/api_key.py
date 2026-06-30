@@ -38,6 +38,11 @@ class APIKey(Base):
         default=1,
     )
 
+    project_id: Mapped[int] = mapped_column(
+        ForeignKey("projects.id"),
+        nullable=False,
+    )
+
     active: Mapped[bool] = mapped_column(
         Boolean,
         default=True,
@@ -50,5 +55,10 @@ class APIKey(Base):
 
     plan = relationship(
         "Plan",
+        back_populates="api_keys",
+    )
+
+    project = relationship(
+        "Project",
         back_populates="api_keys",
     )

@@ -64,6 +64,31 @@ class UsageRepository:
             .count()
         )
 
+    def get_requests_this_month(
+        self,
+        api_key_id: int,
+    ) -> int:
+        """
+        Returns total requests made this month.
+        """
+
+        start_of_month = datetime.utcnow().replace(
+            day=1,
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0,
+        )
+
+        return (
+            self.db.query(UsageLog)
+            .filter(
+                UsageLog.api_key_id == api_key_id,
+                UsageLog.created_at >= start_of_month,
+            )
+            .count()
+        )
+
     def get_average_latency(
         self,
         api_key_id: int,

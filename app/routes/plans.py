@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.database.dependencies import get_db
+from app.schemas.error import ErrorResponse
+from app.schemas.plan import PlansResponse
 from app.services.plan_service import PlanService
 
 router = APIRouter(
@@ -10,17 +12,38 @@ router = APIRouter(
 )
 
 
-@router.get("")
+@router.get(
+    "",
+    response_model=PlansResponse,
+    summary="Available Plans",
+    description="""
+Returns all publicly available Nativeee platform plans.
+
+Useful for pricing pages,
+developer onboarding,
+and plan comparisons.
+""",
+    responses={
+        500: {
+            "model": ErrorResponse,
+            "description": "Internal server error",
+        },
+    },
+)
 def get_plans(
     db: Session = Depends(get_db),
 ):
+    """
+    Returns all available subscription plans.
+    """
+
     service = PlanService(db)
 
     plans = service.get_all()
 
-    return {
-        "success": True,
-        "plans": [
+    return PlansResponse(
+        success=True,
+        plans=[
             {
                 "id": plan.id,
                 "name": plan.name,
@@ -29,4 +52,4 @@ def get_plans(
             }
             for plan in plans
         ],
-    }
+    )

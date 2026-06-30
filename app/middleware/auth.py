@@ -1,13 +1,14 @@
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from fastapi import HTTPException
-from fastapi.responses import JSONResponse
 
-from app.core.request_context import RequestContext
 from app.database.session import SessionLocal
-from app.repositories.api_key_repository import APIKeyRepository
+from app.services.api_key_auth_service import APIKeyAuthService
+from app.services.quota_service import QuotaService
 from app.services.rate_limit_service import RateLimitService
-from app.utils.crypto import hash_api_key
+from app.services.request_context_builder import (
+    RequestContextBuilder,
+)
 
 
 PUBLIC_ROUTES = {
@@ -26,49 +27,30 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
         if request.url.path in PUBLIC_ROUTES:
             return await call_next(request)
 
-        auth = request.headers.get("Authorization")
-
-        if not auth:
-            return JSONResponse(
-                status_code=401,
-                content={"detail": "Missing Authorization Header"},
-            )
-
-        if not auth.startswith("Bearer "):
-            return JSONResponse(
-                status_code=401,
-                content={"detail": "Invalid Authorization Header"},
-            )
-
-        api_key = auth.replace("Bearer ", "")
-
         db = SessionLocal()
 
         try:
+            # -------------------------------------------------
+            # Authenticate API Key
+            # -------------------------------------------------
+
             record = (
-                APIKeyRepository(db)
-                .get_by_hash(hash_api_key(api_key))
+                APIKeyAuthService(db)
+                .authenticate(
+                    request.headers.get(
+                        "Authorization"
+                    )
+                )
             )
 
-            if not record:
-                return JSONResponse(
-                    status_code=401,
-                    content={"detail": "Invalid API Key"},
-                )
-
-            if not record.active:
-                return JSONResponse(
-                    status_code=403,
-                    content={"detail": "API Key Disabled"},
-                )
-
             # -------------------------------------------------
-            # Rate Limiting (UPDATED LINE)
+            # Rate Limiting
             # -------------------------------------------------
+
             rate_limiter = RateLimitService(db)
 
             result = rate_limiter.is_allowed(
-                record   # ✅ CHANGED: was record.id
+                record,
             )
 
             if not result["allowed"]:
@@ -77,18 +59,67 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
                     detail="Rate limit exceeded",
                 )
 
+            # -------------------------------------------------
+            # Monthly Quota
+            # -------------------------------------------------
+
+            quota_service = QuotaService(db)
+
+            quota = quota_service.is_allowed(
+                record,
+            )
+
+            if not quota["allowed"]:
+                raise HTTPException(
+                    status_code=429,
+                    detail="Monthly quota exceeded",
+                )
+
+            # -------------------------------------------------
+            # Store Request State
+            # -------------------------------------------------
+
             request.state.rate_limit = result
+            request.state.quota = quota
             request.state.api_key = record
 
-            request.state.context = RequestContext(
-                request_id=request.headers.get("X-Request-ID", ""),
-                api_key_id=record.id,
+            request.state.context = (
+                RequestContextBuilder()
+                .build(
+                    request=request,
+                    api_key=record,
+                )
             )
 
             response = await call_next(request)
 
-            response.headers["X-RateLimit-Limit"] = str(result["limit"])
-            response.headers["X-RateLimit-Remaining"] = str(result["remaining"])
+            # -------------------------------------------------
+            # Rate Limit Headers
+            # -------------------------------------------------
+
+            response.headers["X-RateLimit-Limit"] = str(
+                result["limit"]
+            )
+
+            response.headers["X-RateLimit-Remaining"] = str(
+                result["remaining"]
+            )
+
+            # -------------------------------------------------
+            # Monthly Quota Headers
+            # -------------------------------------------------
+
+            response.headers["X-Quota-Limit"] = str(
+                quota["limit"]
+            )
+
+            response.headers["X-Quota-Used"] = str(
+                quota["used"]
+            )
+
+            response.headers["X-Quota-Remaining"] = str(
+                quota["remaining"]
+            )
 
             return response
 

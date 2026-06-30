@@ -1,9 +1,11 @@
 from sqlalchemy.orm import Session
 
 from app.schemas.dashboard import (
-    DashboardIdentity,
+    DashboardAPIKey,
     DashboardLimits,
     DashboardPerformance,
+    DashboardPlan,
+    DashboardProject,
     DashboardResponse,
     DashboardUsage,
 )
@@ -26,29 +28,48 @@ class DashboardService:
         api_key,
     ) -> DashboardResponse:
 
+        plan = api_key.plan
+        project = api_key.project
+
+        total_requests = self.usage_service.get_total_requests(
+            api_key.id
+        )
+
+        requests_today = self.usage_service.get_requests_today(
+            api_key.id
+        )
+
+        average_latency = self.usage_service.get_average_latency(
+            api_key.id
+        )
+
+        success_rate = self.usage_service.get_success_rate(
+            api_key.id
+        )
+
         return DashboardResponse(
-            identity=DashboardIdentity(
-                api_key=api_key.name,
-                plan=api_key.plan.name,
+            project=DashboardProject(
+                id=project.id,
+                name=project.name,
+            ),
+            api_key=DashboardAPIKey(
+                id=api_key.id,
+                name=api_key.name,
+            ),
+            plan=DashboardPlan(
+                id=plan.id,
+                name=plan.name,
             ),
             usage=DashboardUsage(
-                total_requests=self.usage_service.get_total_requests(
-                    api_key.id
-                ),
-                requests_today=self.usage_service.get_requests_today(
-                    api_key.id
-                ),
+                total_requests=total_requests,
+                requests_today=requests_today,
             ),
             limits=DashboardLimits(
-                requests_per_minute=api_key.plan.requests_per_minute,
-                requests_per_month=api_key.plan.requests_per_month,
+                requests_per_minute=plan.requests_per_minute,
+                requests_per_month=plan.requests_per_month,
             ),
             performance=DashboardPerformance(
-                average_latency_ms=self.usage_service.get_average_latency(
-                    api_key.id
-                ),
-                success_rate=self.usage_service.get_success_rate(
-                    api_key.id
-                ),
+                average_latency_ms=average_latency,
+                success_rate=success_rate,
             ),
         )

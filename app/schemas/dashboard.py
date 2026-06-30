@@ -1,9 +1,19 @@
 from pydantic import BaseModel
 
 
-class DashboardIdentity(BaseModel):
-    api_key: str
-    plan: str
+class DashboardProject(BaseModel):
+    id: int
+    name: str
+
+
+class DashboardAPIKey(BaseModel):
+    id: int
+    name: str
+
+
+class DashboardPlan(BaseModel):
+    id: int
+    name: str
 
 
 class DashboardUsage(BaseModel):
@@ -22,7 +32,9 @@ class DashboardPerformance(BaseModel):
 
 
 class DashboardResponse(BaseModel):
-    identity: DashboardIdentity
+    project: DashboardProject
+    api_key: DashboardAPIKey
+    plan: DashboardPlan
     usage: DashboardUsage
     limits: DashboardLimits
     performance: DashboardPerformance

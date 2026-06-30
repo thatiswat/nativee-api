@@ -1,7 +1,8 @@
 from app.schemas.me import (
-    APIKeyResponse,
+    APIKeyInfo,
     MeResponse,
-    PlanResponse,
+    PlanInfo,
+    ProjectInfo,
 )
 
 
@@ -19,11 +20,15 @@ class IdentityService:
     ) -> MeResponse:
 
         return MeResponse(
-            api_key=APIKeyResponse(
+            project=ProjectInfo(
+                id=api_key.project.id,
+                name=api_key.project.name,
+            ),
+            api_key=APIKeyInfo(
                 id=api_key.id,
                 name=api_key.name,
             ),
-            plan=PlanResponse(
+            plan=PlanInfo(
                 id=api_key.plan.id,
                 name=api_key.plan.name,
                 requests_per_minute=api_key.plan.requests_per_minute,

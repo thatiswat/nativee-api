@@ -27,6 +27,7 @@ from app.core.settings import (
 )
 from app.database.session import SessionLocal
 from app.middleware.auth import AuthenticationMiddleware
+from app.schemas.root import RootResponse
 from app.services.plan_service import PlanService
 
 
@@ -58,10 +59,6 @@ async def lifespan(app: FastAPI):
         ),
     )
 
-    # ---------------------------------------------------------
-    # Platform Initialization
-    # ---------------------------------------------------------
-
     db = SessionLocal()
 
     try:
@@ -79,24 +76,42 @@ async def lifespan(app: FastAPI):
 # FastAPI
 # ---------------------------------------------------------------------
 
+from fastapi import (
+    FastAPI,
+    HTTPException,
+    Request,
+)
+
+# ...
+
 app = FastAPI(
     title="Nativee API",
     version="1.0.0",
+    description="""
+Nativee is an AI Language Platform for Indian languages.
+
+The platform provides APIs for:
+
+• Speech Recognition
+
+• Translation
+
+• Text-to-Speech
+
+Designed for developers and enterprises.
+""",
+    contact={
+        "name": "Nativee",
+        "url": "https://nativee.in",
+        "email": "support@nativee.in",
+    },
+    license_info={
+        "name": "Proprietary",
+    },
+    terms_of_service="https://nativee.in/terms",
     default_response_class=ORJSONResponse,
     lifespan=lifespan,
 )
-
-bearer_scheme = HTTPBearer(
-    bearerFormat="API Key",
-    scheme_name="BearerAuth",
-    description=(
-        "Paste your Nativee API Key.\n\n"
-        "Example:\n"
-        "Bearer ntv_live_xxxxxxxxxxxxxxxxx"
-    ),
-)
-
-logger.info("Nativee API Started")
 
 
 # ---------------------------------------------------------------------
@@ -159,23 +174,48 @@ app.include_router(api_router)
 
 
 # ---------------------------------------------------------------------
-# Health Check
+# Platform
 # ---------------------------------------------------------------------
 
-@app.get("/")
+@app.get(
+    "/",
+    tags=["Platform"],
+    response_model=RootResponse,
+    summary="Platform Information",
+    description="""
+Returns general information about the Nativee API platform.
+""",
+)
 async def root():
-    return {
-        "status": "running",
-        "product": "Nativee",
-        "version": "1.0.0",
-    }
+    return RootResponse(
+        name="Nativee API",
+        status="running",
+        version="1.0.0",
+        documentation="https://developer.nativee.in",
+        status_page="https://status.nativee.in",
+    )
 
 
 # ---------------------------------------------------------------------
 # Audio
 # ---------------------------------------------------------------------
 
-@app.get("/audio/{filename}")
+@app.get(
+    "/audio/{filename}",
+    tags=["Audio"],
+    summary="Download Audio",
+    description="""
+Downloads generated speech audio.
+
+Audio files are temporary and automatically deleted
+after a short period.
+""",
+    responses={
+        404: {
+            "description": "Audio file not found",
+        },
+    },
+)
 async def get_audio(filename: str):
     file_path = UPLOAD_DIR / filename
 
@@ -210,7 +250,7 @@ def custom_openapi():
     openapi_schema = get_openapi(
         title=app.title,
         version=app.version,
-        description="Nativee Platform API",
+        description=app.description,
         routes=app.routes,
     )
 

@@ -5,9 +5,10 @@ from app.routes.translate import router as translate_router
 from app.routes.api_keys import router as api_key_router
 from app.routes.analytics import router as analytics_router
 from app.routes.plans import router as plans_router
+from app.routes.projects import router as projects_router  # ✅ ADDED
 from app.routes.usage import router as usage_router
 from app.routes.me import router as me_router
-from app.routes.dashboard import router as dashboard_router  # ✅ ADDED
+from app.routes.dashboard import router as dashboard_router
 
 
 router = APIRouter(prefix="/v1")
@@ -19,10 +20,15 @@ router.include_router(speech_router)
 router.include_router(translate_router)
 router.include_router(api_key_router)
 router.include_router(analytics_router)
+
+# -------------------------
+# Platform routes
+# -------------------------
 router.include_router(plans_router)
+router.include_router(projects_router)  # ✅ ADDED
 router.include_router(usage_router)
+router.include_router(dashboard_router)
 router.include_router(me_router)
-router.include_router(dashboard_router)  # ✅ ADDED
 
 # -------------------------
 # Health check

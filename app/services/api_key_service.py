@@ -1,35 +1,49 @@
 from fastapi import HTTPException
 
+from app.models.api_key import APIKey
+from app.repositories.api_key_repository import APIKeyRepository
+from app.repositories.plan_repository import PlanRepository
+from app.repositories.project_repository import ProjectRepository
+from app.schemas.api_key import CreateAPIKeyResponse
 from app.utils.crypto import (
     generate_api_key,
     hash_api_key,
 )
 
-from app.models.api_key import APIKey
-from app.repositories.api_key_repository import APIKeyRepository
-from app.repositories.plan_repository import PlanRepository
-from app.schemas.api_key import CreateAPIKeyResponse
-
 
 class APIKeyService:
-
     def create_key(
         self,
         db,
         name: str,
         live: bool = True,
+        project_id: int = 1,
         plan_id: int = 1,
     ):
         """
         Create a Nativeee API Key.
 
+        - Validates project
         - Validates plan
         - Generates API key (returned only once)
         - Stores only hashed version
         """
 
         # ---------------------------------------
-        # 1. Validate plan exists (business rule)
+        # 1. Validate project exists
+        # ---------------------------------------
+        project_repo = ProjectRepository(db)
+
+        project = project_repo.get(project_id)
+
+        if not project:
+            raise HTTPException(
+                status_code=404,
+                detail="Project not found",
+            )
+
+        # ---------------------------------------
+        # 2. Validate plan exists
         # ---------------------------------------
         plan_repo = PlanRepository(db)
         plan = plan_repo.get(plan_id)
@@ -41,36 +55,154 @@ class APIKeyService:
             )
 
         # ---------------------------------------
-        # 2. Generate API key
+        # 3. Generate API key
         # ---------------------------------------
         api_key = generate_api_key(live=live)
 
         # ---------------------------------------
-        # 3. Hash API key
+        # 4. Hash API key
         # ---------------------------------------
         key_hash = hash_api_key(api_key)
 
         # ---------------------------------------
-        # 4. Create model
+        # 5. Create model
         # ---------------------------------------
         record = APIKey(
             name=name,
             key_hash=key_hash,
             active=True,
+            project_id=project_id,
             plan_id=plan_id,
         )
 
         # ---------------------------------------
-        # 5. Persist (repository instance)
+        # 6. Persist
         # ---------------------------------------
         repository = APIKeyRepository(db)
         record = repository.create(record)
 
         # ---------------------------------------
-        # 6. Response
+        # 7. Response
         # ---------------------------------------
         return CreateAPIKeyResponse(
             id=record.id,
             name=record.name,
             api_key=api_key,
         )
+
+    # ---------------------------------------
+    # List API Keys
+    # ---------------------------------------
+
+    def get_all_keys(
+        self,
+        db,
+    ):
+        repository = APIKeyRepository(db)
+        return repository.get_all()
+
+    # ---------------------------------------
+    # Disable API Key
+    # ---------------------------------------
+
+    def disable_key(
+        self,
+        db,
+        api_key_id: int,
+    ):
+        repository = APIKeyRepository(db)
+
+        record = repository.get(api_key_id)
+
+        if not record:
+            raise HTTPException(
+                status_code=404,
+                detail="API Key not found",
+            )
+
+        record.active = False
+
+        return repository.update(record)
+
+    # ---------------------------------------
+    # Enable API Key
+    # ---------------------------------------
+
+    def enable_key(
+        self,
+        db,
+        api_key_id: int,
+    ):
+        repository = APIKeyRepository(db)
+
+        record = repository.get(api_key_id)
+
+        if not record:
+            raise HTTPException(
+                status_code=404,
+                detail="API Key not found",
+            )
+
+        record.active = True
+
+        return repository.update(record)
+
+    # ---------------------------------------
+    # Delete API Key
+    # ---------------------------------------
+
+    def delete_key(
+        self,
+        db,
+        api_key_id: int,
+    ):
+        repository = APIKeyRepository(db)
+
+        record = repository.get(api_key_id)
+
+        if not record:
+            raise HTTPException(
+                status_code=404,
+                detail="API Key not found",
+            )
+
+        repository.delete(record)
+
+        return {
+            "success": True,
+            "message": "API Key deleted",
+        }
+
+    # ---------------------------------------
+    # Rotate API Key
+    # ---------------------------------------
+
+    def rotate_key(
+        self,
+        db,
+        api_key_id: int,
+    ):
+        repository = APIKeyRepository(db)
+
+        record = repository.get(api_key_id)
+
+        if not record:
+            raise HTTPException(
+                status_code=404,
+                detail="API Key not found",
+            )
+
+        new_key = generate_api_key(
+            live=True,
+        )
+
+        record.key_hash = hash_api_key(
+            new_key,
+        )
+
+        repository.update(record)
+
+        return {
+            "success": True,
+            "api_key": new_key,
+        }
