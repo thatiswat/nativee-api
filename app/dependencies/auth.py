@@ -15,14 +15,19 @@ from app.repositories.user_repository import UserRepository
 from app.utils.crypto import hash_api_key
 
 
-security = HTTPBearer()
+security = HTTPBearer(
+    auto_error=False,
+)
 
 
 # ==========================================================
 # API KEY AUTH (Developer / Service Auth)
 # ==========================================================
+
 async def require_api_key(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    credentials: HTTPAuthorizationCredentials | None = Depends(
+        security,
+    ),
     db: Session = Depends(get_db),
 ):
     """
@@ -32,12 +37,21 @@ async def require_api_key(
         Authorization: Bearer <api_key>
     """
 
+    if credentials is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Missing Authorization header",
+        )
+
     api_key = credentials.credentials
 
     key_hash = hash_api_key(api_key)
 
     repository = APIKeyRepository(db)
-    record = repository.get_by_hash(key_hash)
+
+    record = repository.get_by_hash(
+        key_hash,
+    )
 
     if record is None:
         raise HTTPException(
@@ -57,32 +71,31 @@ async def require_api_key(
 # ==========================================================
 # JWT AUTH (User Auth)
 # ==========================================================
+
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    credentials: HTTPAuthorizationCredentials | None = Depends(
+        security,
+    ),
     db: Session = Depends(get_db),
 ):
     """
-    Authenticate requests using JWT Bearer token.
+    Authenticate requests using a JWT Bearer token.
 
     Expected header:
         Authorization: Bearer <jwt_token>
     """
 
-    print("AUTH HEADER:", credentials)
+    if credentials is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Missing Authorization header",
+        )
 
     token = credentials.credentials
 
-    print("TOKEN:", token)
-
-    try:
-        payload = decode_access_token(token)
-        print("PAYLOAD:", payload)
-    except Exception as e:
-        print("JWT ERROR:", repr(e))
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid token",
-        )
+    payload = decode_access_token(
+        token,
+    )
 
     if payload is None:
         raise HTTPException(
@@ -90,8 +103,9 @@ async def get_current_user(
             detail="Invalid token",
         )
 
-    user_id = payload.get("sub")
-    print("USER ID:", user_id)
+    user_id = payload.get(
+        "sub",
+    )
 
     if user_id is None or not str(user_id).isdigit():
         raise HTTPException(
@@ -99,13 +113,13 @@ async def get_current_user(
             detail="Invalid token",
         )
 
-    repository = UserRepository(db)
+    repository = UserRepository(
+        db,
+    )
 
     user = repository.get_by_id(
         int(user_id),
     )
-
-    print("USER:", user)
 
     if user is None:
         raise HTTPException(
