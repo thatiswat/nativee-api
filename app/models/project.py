@@ -1,7 +1,4 @@
-from sqlalchemy import Column
-from sqlalchemy import DateTime
-from sqlalchemy import Integer
-from sqlalchemy import String
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -11,27 +8,26 @@ from app.database.base import Base
 class Project(Base):
     __tablename__ = "projects"
 
-    id = Column(
+    id = Column(Integer, primary_key=True, index=True)
+
+    name = Column(String, nullable=False)
+
+    slug = Column(String, unique=True, index=True, nullable=False)
+
+    description = Column(String, nullable=True)
+
+    # ✅ Correct ownership field
+    owner_id = Column(
         Integer,
-        primary_key=True,
+        ForeignKey("users.id"),
+        nullable=False,
         index=True,
     )
 
-    name = Column(
-        String,
-        nullable=False,
-    )
-
-    slug = Column(
-        String,
-        unique=True,
-        index=True,
-        nullable=False,
-    )
-
-    description = Column(
-        String,
-        nullable=True,
+    # ✅ Relationship
+    owner = relationship(
+        "User",
+        back_populates="projects",
     )
 
     api_keys = relationship(

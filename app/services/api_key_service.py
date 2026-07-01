@@ -12,9 +12,14 @@ from app.utils.crypto import (
 
 
 class APIKeyService:
+    # ---------------------------------------
+    # Create API Key
+    # ---------------------------------------
+
     def create_key(
         self,
         db,
+        user_id: int,
         name: str,
         live: bool = True,
         project_id: int = 1,
@@ -23,18 +28,21 @@ class APIKeyService:
         """
         Create a Nativeee API Key.
 
-        - Validates project
+        - Validates project ownership
         - Validates plan
         - Generates API key (returned only once)
         - Stores only hashed version
         """
 
         # ---------------------------------------
-        # 1. Validate project exists
+        # 1. Validate project belongs to user
         # ---------------------------------------
         project_repo = ProjectRepository(db)
 
-        project = project_repo.get(project_id)
+        project = project_repo.get_owned(
+            user_id,
+            project_id,
+        )
 
         if not project:
             raise HTTPException(
@@ -46,6 +54,7 @@ class APIKeyService:
         # 2. Validate plan exists
         # ---------------------------------------
         plan_repo = PlanRepository(db)
+
         plan = plan_repo.get(plan_id)
 
         if not plan:
@@ -57,12 +66,16 @@ class APIKeyService:
         # ---------------------------------------
         # 3. Generate API key
         # ---------------------------------------
-        api_key = generate_api_key(live=live)
+        api_key = generate_api_key(
+            live=live,
+        )
 
         # ---------------------------------------
         # 4. Hash API key
         # ---------------------------------------
-        key_hash = hash_api_key(api_key)
+        key_hash = hash_api_key(
+            api_key,
+        )
 
         # ---------------------------------------
         # 5. Create model
@@ -79,6 +92,7 @@ class APIKeyService:
         # 6. Persist
         # ---------------------------------------
         repository = APIKeyRepository(db)
+
         record = repository.create(record)
 
         # ---------------------------------------
@@ -97,9 +111,13 @@ class APIKeyService:
     def get_all_keys(
         self,
         db,
+        user_id: int,
     ):
         repository = APIKeyRepository(db)
-        return repository.get_all()
+
+        return repository.get_by_user(
+            user_id,
+        )
 
     # ---------------------------------------
     # Disable API Key
@@ -108,11 +126,15 @@ class APIKeyService:
     def disable_key(
         self,
         db,
+        user_id: int,
         api_key_id: int,
     ):
         repository = APIKeyRepository(db)
 
-        record = repository.get(api_key_id)
+        record = repository.get_owned(
+            user_id,
+            api_key_id,
+        )
 
         if not record:
             raise HTTPException(
@@ -131,11 +153,15 @@ class APIKeyService:
     def enable_key(
         self,
         db,
+        user_id: int,
         api_key_id: int,
     ):
         repository = APIKeyRepository(db)
 
-        record = repository.get(api_key_id)
+        record = repository.get_owned(
+            user_id,
+            api_key_id,
+        )
 
         if not record:
             raise HTTPException(
@@ -154,11 +180,15 @@ class APIKeyService:
     def delete_key(
         self,
         db,
+        user_id: int,
         api_key_id: int,
     ):
         repository = APIKeyRepository(db)
 
-        record = repository.get(api_key_id)
+        record = repository.get_owned(
+            user_id,
+            api_key_id,
+        )
 
         if not record:
             raise HTTPException(
@@ -180,11 +210,15 @@ class APIKeyService:
     def rotate_key(
         self,
         db,
+        user_id: int,
         api_key_id: int,
     ):
         repository = APIKeyRepository(db)
 
-        record = repository.get(api_key_id)
+        record = repository.get_owned(
+            user_id,
+            api_key_id,
+        )
 
         if not record:
             raise HTTPException(

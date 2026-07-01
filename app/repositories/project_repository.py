@@ -35,6 +35,20 @@ class ProjectRepository:
             .first()
         )
 
+    def get_owned(
+        self,
+        user_id: int,
+        project_id: int,
+    ) -> Project | None:
+        return (
+            self.db.query(Project)
+            .filter(
+                Project.id == project_id,
+                Project.user_id == user_id,
+            )
+            .first()
+        )
+
     def get_by_slug(
         self,
         slug: str,
@@ -52,6 +66,37 @@ class ProjectRepository:
             self.db.query(Project)
             .order_by(Project.created_at.desc())
             .all()
+        )
+
+    # ----------------------------------
+    # User
+    # ----------------------------------
+
+    def get_by_user(
+        self,
+        user_id: int,
+    ) -> list[Project]:
+        return (
+            self.db.query(Project)
+            .filter(
+                Project.user_id == user_id,
+            )
+            .order_by(
+                Project.created_at.desc(),
+            )
+            .all()
+        )
+
+    def count_by_user(
+        self,
+        user_id: int,
+    ) -> int:
+        return (
+            self.db.query(Project)
+            .filter(
+                Project.user_id == user_id,
+            )
+            .count()
         )
 
     # ----------------------------------

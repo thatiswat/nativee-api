@@ -41,6 +41,7 @@ class ConversationService:
     async def process(
         self,
         db,
+        api_key,
         request_id: str,
         context,
         audio,
@@ -106,19 +107,20 @@ class ConversationService:
             - backend_start
         )
 
+        # ---------------------------------------
+        # Usage Context
+        # ---------------------------------------
+
+        context.api_key = api_key
         context.endpoint = "/conversation"
-        context.latency_ms = (
-            backend_total * 1000
-        )
+        context.latency_ms = backend_total * 1000
         context.success = True
 
         # ---------------------------------------
         # Usage Logging
         # ---------------------------------------
 
-        UsageService(db).log(
-            context
-        )
+        UsageService(db).log(context)
 
         filename = Path(
             result["audio_output"]

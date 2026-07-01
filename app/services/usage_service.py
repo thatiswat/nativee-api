@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
 
-from app.core.request_context import RequestContext
 from app.models.usage_log import UsageLog
 from app.repositories.usage_repository import UsageRepository
 from app.schemas.usage import UsageSummaryResponse
@@ -9,6 +8,8 @@ from app.schemas.usage import UsageSummaryResponse
 class UsageService:
     """
     Handles all platform usage logging and metrics.
+
+    Now PROJECT-SCOPED (not API-key scoped).
     """
 
     def __init__(self, db: Session):
@@ -18,13 +19,18 @@ class UsageService:
     # --------------------------------------------------
     # Write path
     # --------------------------------------------------
-    def log(
-        self,
-        context: RequestContext,
-    ) -> UsageLog:
+    def log(self, context) -> UsageLog:
+        """
+        context must contain:
+        - project_id
+        - endpoint
+        - provider
+        - latency_ms
+        - success
+        """
 
         usage = UsageLog(
-            api_key_id=context.api_key_id,
+            project_id=context.project_id,
             endpoint=context.endpoint,
             provider=context.provider,
             latency_ms=context.latency_ms,
@@ -34,33 +40,29 @@ class UsageService:
         return self.repository.create(usage)
 
     # --------------------------------------------------
-    # Read paths
+    # Read paths (PROJECT scoped)
     # --------------------------------------------------
-    def get_total_requests(self, api_key_id: int) -> int:
-        return self.repository.get_total_requests(api_key_id)
+    def get_total_requests(self, project_id: int) -> int:
+        return self.repository.get_total_requests(project_id)
 
-    def get_requests_today(self, api_key_id: int) -> int:
-        return self.repository.get_requests_today(api_key_id)
+    def get_requests_today(self, project_id: int) -> int:
+        return self.repository.get_requests_today(project_id)
 
-    def get_average_latency(self, api_key_id: int) -> float:
-        return self.repository.get_average_latency(api_key_id)
+    def get_average_latency(self, project_id: int) -> float:
+        return self.repository.get_average_latency(project_id)
 
-    def get_success_rate(self, api_key_id: int) -> float:
-        return self.repository.get_success_rate(api_key_id)
+    def get_success_rate(self, project_id: int) -> float:
+        return self.repository.get_success_rate(project_id)
 
     # --------------------------------------------------
-    # Business layer (platform contract)
+    # Business layer (dashboard contract)
     # --------------------------------------------------
-    def get_usage_summary(
-        self,
-        api_key,
-    ) -> UsageSummaryResponse:
-
+    def get_usage_summary(self, project, plan) -> UsageSummaryResponse:
         return UsageSummaryResponse(
-            api_key=api_key.name,
-            plan=api_key.plan.name,
-            total_requests=self.get_total_requests(api_key.id),
-            requests_today=self.get_requests_today(api_key.id),
-            average_latency_ms=self.get_average_latency(api_key.id),
-            success_rate=self.get_success_rate(api_key.id),
+            project=project.name,
+            plan=plan.name if plan else None,
+            total_requests=self.get_total_requests(project.id),
+            requests_today=self.get_requests_today(project.id),
+            average_latency_ms=self.get_average_latency(project.id),
+            success_rate=self.get_success_rate(project.id),
         )

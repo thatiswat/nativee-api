@@ -5,28 +5,16 @@ import time
 
 import httpx
 
-from fastapi import (
-    FastAPI,
-    HTTPException,
-    Request,
-)
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.openapi.utils import get_openapi
-from fastapi.responses import (
-    FileResponse,
-    ORJSONResponse,
-)
-from fastapi.security import HTTPBearer
+from fastapi.responses import FileResponse, ORJSONResponse
 
 from app.api.v1 import router as api_router
 from app.core.logger import logger
-from app.core.settings import (
-    GROQ_API_KEY,
-    UPLOAD_DIR,
-)
+from app.core.settings import GROQ_API_KEY, UPLOAD_DIR
 from app.database.session import SessionLocal
-from app.middleware.auth import AuthenticationMiddleware
 from app.schemas.root import RootResponse
 from app.services.plan_service import PlanService
 
@@ -42,14 +30,11 @@ else:
 
 
 # ---------------------------------------------------------------------
-# Application Lifespan
+# Lifespan
 # ---------------------------------------------------------------------
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Create shared resources and initialize the platform.
-    """
 
     app.state.http = httpx.AsyncClient(
         timeout=httpx.Timeout(30.0),
@@ -75,14 +60,6 @@ async def lifespan(app: FastAPI):
 # ---------------------------------------------------------------------
 # FastAPI
 # ---------------------------------------------------------------------
-
-from fastapi import (
-    FastAPI,
-    HTTPException,
-    Request,
-)
-
-# ...
 
 app = FastAPI(
     title="Nativee API",
@@ -137,13 +114,10 @@ app.add_middleware(
     minimum_size=1000,
 )
 
-app.add_middleware(
-    AuthenticationMiddleware,
-)
-
 
 @app.middleware("http")
 async def benchmark(request: Request, call_next):
+
     request.state.id = secrets.token_hex(4)
 
     start = time.perf_counter()
@@ -182,11 +156,9 @@ app.include_router(api_router)
     tags=["Platform"],
     response_model=RootResponse,
     summary="Platform Information",
-    description="""
-Returns general information about the Nativee API platform.
-""",
 )
 async def root():
+
     return RootResponse(
         name="Nativee API",
         status="running",
@@ -204,19 +176,9 @@ async def root():
     "/audio/{filename}",
     tags=["Audio"],
     summary="Download Audio",
-    description="""
-Downloads generated speech audio.
-
-Audio files are temporary and automatically deleted
-after a short period.
-""",
-    responses={
-        404: {
-            "description": "Audio file not found",
-        },
-    },
 )
 async def get_audio(filename: str):
+
     file_path = UPLOAD_DIR / filename
 
     if not file_path.exists():
@@ -247,35 +209,26 @@ def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
 
-    openapi_schema = get_openapi(
+    schema = get_openapi(
         title=app.title,
         version=app.version,
         description=app.description,
         routes=app.routes,
     )
 
-    openapi_schema.setdefault("components", {})
+    schema.setdefault("components", {})
 
-    openapi_schema["components"]["securitySchemes"] = {
+    schema["components"]["securitySchemes"] = {
         "BearerAuth": {
             "type": "http",
             "scheme": "bearer",
-            "bearerFormat": "API Key",
+            "bearerFormat": "JWT / API Key",
         }
     }
 
-    for path in openapi_schema["paths"].values():
-        for operation in path.values():
-            if isinstance(operation, dict):
-                operation["security"] = [
-                    {
-                        "BearerAuth": []
-                    }
-                ]
+    app.openapi_schema = schema
 
-    app.openapi_schema = openapi_schema
-
-    return app.openapi_schema
+    return schema
 
 
 app.openapi = custom_openapi

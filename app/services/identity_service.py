@@ -8,10 +8,7 @@ from app.schemas.me import (
 
 class IdentityService:
     """
-    Handles authenticated identity.
-
-    Uses the API key already loaded by AuthenticationMiddleware.
-    No database queries are required.
+    Uses the authenticated API Key provided by the API Key dependency.
     """
 
     def get_me(

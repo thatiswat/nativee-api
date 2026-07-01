@@ -42,6 +42,7 @@ class ProjectService:
 
     def create(
         self,
+        user_id: int,
         name: str,
         description: str | None = None,
     ) -> Project:
@@ -57,6 +58,7 @@ class ProjectService:
             )
 
         project = Project(
+            user_id=user_id,
             name=name,
             slug=slug,
             description=description,
@@ -70,12 +72,16 @@ class ProjectService:
 
     def get(
         self,
+        user_id: int,
         project_id: int,
     ) -> Project:
 
-        project = self.repository.get(project_id)
+        project = self.repository.get_owned(
+            user_id,
+            project_id,
+        )
 
-        if not project:
+        if project is None:
             raise HTTPException(
                 status_code=404,
                 detail="Project not found",
@@ -83,8 +89,13 @@ class ProjectService:
 
         return project
 
-    def get_all(self):
-        return self.repository.get_all()
+    def get_all(
+        self,
+        user_id: int,
+    ) -> list[Project]:
+        return self.repository.get_by_user(
+            user_id,
+        )
 
     # ----------------------------------
     # Update
@@ -92,12 +103,16 @@ class ProjectService:
 
     def update(
         self,
+        user_id: int,
         project_id: int,
         name: str,
         description: str | None = None,
     ) -> Project:
 
-        project = self.get(project_id)
+        project = self.get(
+            user_id,
+            project_id,
+        )
 
         project.name = name
         project.slug = self._generate_slug(name)
@@ -111,10 +126,14 @@ class ProjectService:
 
     def delete(
         self,
+        user_id: int,
         project_id: int,
     ):
 
-        project = self.get(project_id)
+        project = self.get(
+            user_id,
+            project_id,
+        )
 
         self.repository.delete(project)
 

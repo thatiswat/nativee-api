@@ -9,6 +9,7 @@ from fastapi import (
 from sqlalchemy.orm import Session
 
 from app.database.dependencies import get_db
+from app.dependencies.api_key import require_api_key
 from app.schemas.conversation import ConversationResult
 from app.schemas.error import ErrorResponse
 from app.services.conversation_service import ConversationService
@@ -75,6 +76,7 @@ Returns:
 )
 async def conversation(
     request: Request,
+    api_key=Depends(require_api_key),
     db: Session = Depends(get_db),
     audio: UploadFile = File(...),
     source_language: str = Form(...),
@@ -90,6 +92,7 @@ async def conversation(
 
     return await conversation_service.process(
         db=db,
+        api_key=api_key,
         request_id=request.state.id,
         context=request.state.context,
         audio=audio,

@@ -3,7 +3,8 @@ from fastapi import (
     Depends,
 )
 
-from app.dependencies.auth import require_api_key
+from app.dependencies.api_key import require_api_key
+from app.models.api_key import APIKey
 from app.providers.edge_provider import text_to_speech
 from app.providers.registry import ProviderRegistry
 from app.schemas.error import ErrorResponse
@@ -58,7 +59,7 @@ Returns:
 )
 async def translate_endpoint(
     request: TranslateRequest,
-    api_key: str = Depends(require_api_key),
+    api_key: APIKey = Depends(require_api_key),
 ):
     """
     Translate text into another language and generate

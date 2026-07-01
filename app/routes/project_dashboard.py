@@ -1,26 +1,35 @@
 from fastapi import APIRouter
 from fastapi import Depends
+from sqlalchemy.orm import Session
 
+from app.database.dependencies import get_db
 from app.dependencies.api_key import require_api_key
+from app.models.api_key import APIKey
+from app.schemas.project_dashboard import DashboardResponse
 from app.schemas.error import ErrorResponse
-from app.schemas.me import MeResponse
-from app.services.identity_service import IdentityService
-
-router = APIRouter(
-    prefix="/me",
-    tags=["Identity"],
+from app.services.project_dashboard_service import (
+    ProjectDashboardService,
 )
 
-service = IdentityService()
+router = APIRouter(
+    prefix="/project-dashboard",
+    tags=["Project Dashboard"],
+)
 
 
 @router.get(
     "",
-    response_model=MeResponse,
-    summary="Authenticated Identity",
+    response_model=DashboardResponse,
+    summary="Project Dashboard",
     description="""
-Returns the authenticated API Key
-and the assigned subscription plan.
+Returns usage statistics for the authenticated API Key.
+
+Includes:
+
+- Total requests
+- Requests today
+- Average latency
+- Success rate
 """,
     responses={
         401: {
@@ -41,14 +50,10 @@ and the assigned subscription plan.
         },
     },
 )
-def me(
-    api_key=Depends(require_api_key),
+def get_dashboard(
+    api_key: APIKey = Depends(require_api_key),
+    db: Session = Depends(get_db),
 ):
-    """
-    Returns information about the authenticated API key,
-    including its assigned subscription plan.
-    """
-
-    return service.get_me(
+    return ProjectDashboardService(db).overview(
         api_key,
     )

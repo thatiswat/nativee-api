@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter
+from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from app.database.dependencies import get_db
-from app.services.usage_service import UsageService
+from app.dependencies.api_key import require_api_key
 from app.schemas.usage import UsageSummaryResponse
-
+from app.services.usage_service import UsageService
 
 router = APIRouter(
     prefix="/usage",
@@ -14,10 +15,11 @@ router = APIRouter(
 
 @router.get(
     "",
-    response_model=UsageSummaryResponse,  # ✅ ADDED: API contract enforcement
+    response_model=UsageSummaryResponse,
+    summary="Usage Summary",
 )
-def get_usage(
-    request: Request,
+def usage(
+    api_key=Depends(require_api_key),
     db: Session = Depends(get_db),
 ):
     """
@@ -27,5 +29,5 @@ def get_usage(
     service = UsageService(db)
 
     return service.get_usage_summary(
-        request.state.api_key
+        api_key,
     )

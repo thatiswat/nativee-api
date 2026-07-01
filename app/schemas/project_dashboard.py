@@ -1,4 +1,12 @@
+from enum import Enum
+from typing import Optional
 from pydantic import BaseModel
+
+
+class DashboardTimeRange(str, Enum):
+    LAST_24_HOURS = "24h"
+    LAST_7_DAYS = "7d"
+    LAST_30_DAYS = "30d"
 
 
 class DashboardProject(BaseModel):
@@ -8,7 +16,7 @@ class DashboardProject(BaseModel):
 
 class DashboardAPIKey(BaseModel):
     id: int
-    name: str
+    name: Optional[str] = None
 
 
 class DashboardPlan(BaseModel):
@@ -33,8 +41,8 @@ class DashboardPerformance(BaseModel):
 
 class DashboardResponse(BaseModel):
     project: DashboardProject
-    api_key: DashboardAPIKey
-    plan: DashboardPlan
+    api_key: Optional[DashboardAPIKey] = None
+    plan: Optional[DashboardPlan] = None
     usage: DashboardUsage
     limits: DashboardLimits
     performance: DashboardPerformance

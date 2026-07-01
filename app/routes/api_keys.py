@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.database.dependencies import get_db
+from app.dependencies.auth import get_current_user
+from app.models.user import User
 from app.schemas.api_key import (
     APIKeyListResponse,
     CreateAPIKeyRequest,
@@ -37,7 +39,7 @@ Store it securely because it cannot be retrieved again.
     responses={
         404: {
             "model": ErrorResponse,
-            "description": "Plan not found",
+            "description": "Plan or Project not found",
         },
         500: {
             "model": ErrorResponse,
@@ -47,10 +49,14 @@ Store it securely because it cannot be retrieved again.
 )
 def create_key(
     request: CreateAPIKeyRequest,
+    current_user: User = Depends(
+        get_current_user,
+    ),
     db: Session = Depends(get_db),
 ):
     return service.create_key(
         db=db,
+        user_id=current_user.id,
         name=request.name,
         live=request.live,
         project_id=request.project_id,
@@ -67,7 +73,7 @@ def create_key(
     response_model=APIKeyListResponse,
     summary="List API Keys",
     description="""
-Returns all API Keys associated with the account.
+Returns all API Keys owned by the authenticated user.
 
 Each API Key includes its status and assigned plan.
 """,
@@ -79,9 +85,15 @@ Each API Key includes its status and assigned plan.
     },
 )
 def get_api_keys(
+    current_user: User = Depends(
+        get_current_user,
+    ),
     db: Session = Depends(get_db),
 ):
-    keys = service.get_all_keys(db)
+    keys = service.get_all_keys(
+        db,
+        current_user.id,
+    )
 
     return {
         "api_keys": [
@@ -122,10 +134,14 @@ Disabled keys can no longer authenticate requests.
 )
 def disable_api_key(
     api_key_id: int,
+    current_user: User = Depends(
+        get_current_user,
+    ),
     db: Session = Depends(get_db),
 ):
     service.disable_key(
         db,
+        current_user.id,
         api_key_id,
     )
 
@@ -159,10 +175,14 @@ Re-enables a previously disabled API Key.
 )
 def enable_api_key(
     api_key_id: int,
+    current_user: User = Depends(
+        get_current_user,
+    ),
     db: Session = Depends(get_db),
 ):
     service.enable_key(
         db,
+        current_user.id,
         api_key_id,
     )
 
@@ -199,10 +219,14 @@ Store it securely.
 )
 def rotate_api_key(
     api_key_id: int,
+    current_user: User = Depends(
+        get_current_user,
+    ),
     db: Session = Depends(get_db),
 ):
     return service.rotate_key(
         db,
+        current_user.id,
         api_key_id,
     )
 
@@ -233,9 +257,13 @@ This action cannot be undone.
 )
 def delete_api_key(
     api_key_id: int,
+    current_user: User = Depends(
+        get_current_user,
+    ),
     db: Session = Depends(get_db),
 ):
     return service.delete_key(
         db,
+        current_user.id,
         api_key_id,
     )
