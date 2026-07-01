@@ -1,11 +1,11 @@
 
-# 🚀 Nativee Platform
+# Nativee Platform
 
 > AI infrastructure platform powering Nativee Mobile, Web, Developer Platform, and Enterprise integrations.
 
 ---
 
-# 📖 Overview
+# Overview
 
 Nativee Platform is an AI infrastructure system designed to remove language barriers through Speech, Translation, and Voice technologies.
 
@@ -18,7 +18,7 @@ The platform currently powers:
 
 ---
 
-# 🧠 Technology Stack
+# Technology Stack
 
 ## Backend
 - FastAPI
@@ -47,7 +47,7 @@ The platform currently powers:
 
 ---
 
-# 🏗️ Platform Architecture
+# Platform Architecture
 
 The system follows a clean layered architecture:
 
@@ -75,7 +75,7 @@ PostgreSQL
 
 ---
 
-# 🧩 Core Domain Model
+# Core Domain Model
 
 The platform is built around a **Project-based multi-tenant architecture**:
 
@@ -100,7 +100,7 @@ User
 
 ---
 
-# 📦 Core Resources
+# Core Resources
 
 * Users
 * Projects
@@ -113,7 +113,7 @@ User
 
 ---
 
-# 🤖 AI APIs
+# AI APIs
 
 * Conversation API
 * Translation API
@@ -121,7 +121,7 @@ User
 
 ---
 
-# 🌐 Platform APIs
+# Platform APIs
 
 ## Authentication
 
@@ -309,7 +309,7 @@ uvicorn main:app --reload
 
 ---
 
-# 🔥 Final Note
+# Final Note
 
 Nativee Platform is evolving into a **fully multi-tenant AI developer platform** with:
 
