@@ -1,10 +1,4 @@
-Here is your **complete, clean, single-file `README.md`** (fully merged, no conflicts, production-ready, consistent architecture).
 
-Just copy-paste this directly:
-
----
-
-````md
 # 🚀 Nativee Platform
 
 > AI infrastructure platform powering Nativee Mobile, Web, Developer Platform, and Enterprise integrations.
