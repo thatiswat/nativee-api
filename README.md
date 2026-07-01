@@ -204,7 +204,7 @@ User
 
 ---
 
-# 📁 Project Structure
+# Project Structure
 
 ```text
 app/
@@ -228,7 +228,7 @@ migrations/
 
 ---
 
-# 📊 Backend Status
+# Backend Status
 
 Current system supports:
 
@@ -247,7 +247,7 @@ Current system supports:
 
 # 🛣️ Roadmap
 
-## Phase 1 ✅ Foundation
+## Phase 1 Foundation
 
 * Layered Architecture
 * Repository Pattern
@@ -257,7 +257,7 @@ Current system supports:
 * Dashboard Foundation
 * Provider Registry
 
-## Phase 2 🚧 Developer Console
+## Phase 2 Developer Console
 
 * Project Management UI
 * API Key Management UI
@@ -265,7 +265,7 @@ Current system supports:
 * Analytics Dashboard
 * Nativee Console
 
-## Phase 3 🔮 Platform Expansion
+## Phase 3 Platform Expansion
 
 * Billing System
 * Teams & Organizations
@@ -277,7 +277,7 @@ Current system supports:
 
 ---
 
-# 🖥️ Run Locally
+# Run Locally
 
 ```bash
 python -m venv venv
@@ -293,7 +293,7 @@ uvicorn main:app --reload
 
 ---
 
-# 🚀 Deployment
+# Deployment
 
 ## Production
 
