@@ -53,7 +53,7 @@ class APIKeyRepository:
             .join(APIKey.project)
             .filter(
                 APIKey.id == api_key_id,
-                Project.user_id == user_id,
+                Project.owner_id == user_id,
             )
             .first()
         )
@@ -83,7 +83,7 @@ class APIKeyRepository:
             )
             .join(APIKey.project)
             .filter(
-                Project.user_id == user_id,
+                Project.owner_id == user_id,
             )
             .order_by(
                 APIKey.created_at.desc(),
@@ -99,7 +99,7 @@ class APIKeyRepository:
             self.db.query(APIKey)
             .join(APIKey.project)
             .filter(
-                Project.user_id == user_id,
+                Project.owner_id == user_id,
             )
             .count()
         )

@@ -12,29 +12,34 @@ class UsageService:
     Now PROJECT-SCOPED (not API-key scoped).
     """
 
-    def __init__(self, db: Session):
+    def __init__(
+        self,
+        db: Session,
+    ):
         self.db = db
         self.repository = UsageRepository(db)
 
     # --------------------------------------------------
     # Write path
     # --------------------------------------------------
-    def log(self, context) -> UsageLog:
+    def log(
+        self,
+        api_key,
+        endpoint: str,
+        provider: str,
+        latency_ms: float,
+        success: bool,
+    ) -> UsageLog:
         """
-        context must contain:
-        - project_id
-        - endpoint
-        - provider
-        - latency_ms
-        - success
+        Log a single API request.
         """
 
         usage = UsageLog(
-            project_id=context.project_id,
-            endpoint=context.endpoint,
-            provider=context.provider,
-            latency_ms=context.latency_ms,
-            success=context.success,
+            api_key_id=api_key.id,
+            endpoint=endpoint,
+            provider=provider,
+            latency_ms=latency_ms,
+            success=success,
         )
 
         return self.repository.create(usage)
@@ -42,22 +47,38 @@ class UsageService:
     # --------------------------------------------------
     # Read paths (PROJECT scoped)
     # --------------------------------------------------
-    def get_total_requests(self, project_id: int) -> int:
+    def get_total_requests(
+        self,
+        project_id: int,
+    ) -> int:
         return self.repository.get_total_requests(project_id)
 
-    def get_requests_today(self, project_id: int) -> int:
+    def get_requests_today(
+        self,
+        project_id: int,
+    ) -> int:
         return self.repository.get_requests_today(project_id)
 
-    def get_average_latency(self, project_id: int) -> float:
+    def get_average_latency(
+        self,
+        project_id: int,
+    ) -> float:
         return self.repository.get_average_latency(project_id)
 
-    def get_success_rate(self, project_id: int) -> float:
+    def get_success_rate(
+        self,
+        project_id: int,
+    ) -> float:
         return self.repository.get_success_rate(project_id)
 
     # --------------------------------------------------
     # Business layer (dashboard contract)
     # --------------------------------------------------
-    def get_usage_summary(self, project, plan) -> UsageSummaryResponse:
+    def get_usage_summary(
+        self,
+        project,
+        plan,
+    ) -> UsageSummaryResponse:
         return UsageSummaryResponse(
             project=project.name,
             plan=plan.name if plan else None,

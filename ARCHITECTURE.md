@@ -1,29 +1,27 @@
-# Nativeee Platform Architecture
+# 🏛 Nativee Platform Architecture
 
 ---
 
 # Philosophy
 
-Nativeee follows a layered architecture.
+Nativee is designed as an AI infrastructure platform, not a single AI application.
+
+The platform follows a layered architecture with strict separation of responsibilities.
 
 ```
 Client
 
 ↓
 
-Authentication Middleware
+API Layer
 
 ↓
 
-Platform Middleware
+Authentication / Dependencies
 
 ↓
 
-Routes
-
-↓
-
-Services
+Business Services
 
 ↓
 
@@ -31,7 +29,7 @@ Repositories
 
 ↓
 
-Database
+PostgreSQL
 
 ↓
 
@@ -40,45 +38,52 @@ AI Providers
 
 Each layer owns exactly one responsibility.
 
+No layer bypasses another.
+
 ---
 
 # Platform Architecture
 
 ```
-                    Nativeee Platform
+                        Nativee Platform
 
-            Mobile        Web        SDK
-                │
-                ▼
-      Authentication Middleware
-                │
-                ▼
-          Request Context
-                │
-                ▼
-        Dynamic Rate Limiting
-                │
-                ▼
-              Routes
-                │
-                ▼
-             Services
-                │
-                ▼
-        Provider Registry
-                │
-      ┌─────────┴─────────┐
-      ▼                   ▼
- Groq Whisper      Google Provider
-                          │
-                          ▼
-                     Edge TTS
-                │
-                ▼
-          Usage Logging
-                │
-                ▼
-           PostgreSQL
+                 ┌──────────────────────────┐
+                 │     Nativee Console      │
+                 │     (JWT Protected)      │
+                 └─────────────┬────────────┘
+                               │
+                               │
+                 ┌─────────────▼────────────┐
+                 │      Nativee AI API      │
+                 │    (API Key Protected)   │
+                 └─────────────┬────────────┘
+                               │
+                               ▼
+                      Authentication Layer
+                               │
+                               ▼
+                    Rate Limiting & Validation
+                               │
+                               ▼
+                           API Layer
+                               │
+                               ▼
+                        Business Services
+                               │
+                               ▼
+                       Conversation Pipeline
+                               │
+              ┌────────────────┼────────────────┐
+              ▼                ▼                ▼
+        Speech-to-Text    Translation     Text-to-Speech
+              │                │                │
+              └──────────── Provider Registry ────────────┘
+                               │
+                               ▼
+                         Usage Logging
+                               │
+                               ▼
+                           PostgreSQL
 ```
 
 ---
@@ -88,68 +93,125 @@ Each layer owns exactly one responsibility.
 ```
 app/
 
-api/
-core/
-database/
-middleware/
-models/
-providers/
-repositories/
-routes/
-schemas/
-services/
-utils/
+├── api/
+│   └── v1/
+│       ├── customer/
+│       ├── ai/
+│       └── platform/
+│
+├── core/
+├── database/
+├── dependencies/
+├── middleware/
+├── models/
+├── pipelines/
+├── providers/
+├── repositories/
+├── schemas/
+├── security/
+├── services/
+├── utils/
+└── workers/
 ```
 
 ---
 
 # Layer Responsibilities
 
-## Middleware
+## API Layer
 
 Responsible for
 
-- Authentication
-- Rate Limiting
-- Request Context
-
----
-
-## Routes
-
-Responsible for
-
-- HTTP
+- HTTP Endpoints
 - Request Validation
 - Response Models
 
-Routes never contain SQL or business logic.
+Routes never contain business logic or SQL.
+
+---
+
+## Dependencies
+
+Responsible for
+
+- JWT Authentication
+- API Key Authentication
+- Ownership Validation
+- Database Sessions
 
 ---
 
 ## Services
 
-Responsible for business logic.
+Responsible for
+
+- Business Rules
+- Platform Logic
+- Orchestration
 
 Current Services
 
+- AuthService
+- ProjectService
 - APIKeyService
-- PlanService
 - UsageService
-- IdentityService
-- DashboardService
+- AnalyticsService
+- CustomerDashboardService
+- ProjectDashboardService
+- ConversationService
+
+Services never contain SQL.
+
+---
+
+## Pipelines
+
+Responsible for AI orchestration.
+
+Current Pipelines
+
+- Conversation Pipeline
+
+Pipeline flow
+
+```
+Speech
+
+↓
+
+Speech Recognition
+
+↓
+
+Translation
+
+↓
+
+Text-to-Speech
+
+↓
+
+Result
+```
+
+Pipelines never authenticate users or access the database.
 
 ---
 
 ## Repositories
 
-Responsible for database access.
+Responsible only for database access.
 
 Current Repositories
 
+- UserRepository
+- ProjectRepository
 - APIKeyRepository
-- PlanRepository
 - UsageRepository
+- AnalyticsRepository
+- PlanRepository
+
+Repositories never contain business rules.
 
 ---
 
@@ -163,43 +225,98 @@ Current Providers
 - Google Translation
 - Edge TTS
 
+Future Providers
+
+- IndicTrans2
+- Deepgram
+- ElevenLabs
+- OpenAI
+- Azure Speech
+
+Providers never interact with the database.
+
 ---
 
 ## Schemas
 
 Responsible for API contracts.
 
-Current Schemas
+Examples
 
-- MeResponse
-- UsageSummaryResponse
+- ConversationResponse
 - DashboardResponse
+- UsageSummaryResponse
+- AnalyticsResponse
+
+---
+
+# Authentication Model
+
+Nativee separates customer identity from application identity.
+
+## Customer Authentication
+
+```
+Email
+
+↓
+
+JWT
+
+↓
+
+Console APIs
+```
+
+Supports
+
+- Dashboard
+- Projects
+- API Keys
+- Analytics
+- Usage
+- Billing
+
+---
+
+## API Authentication
+
+```
+API Key
+
+↓
+
+AI APIs
+```
+
+Supports
+
+- Conversation
+- Translation
+- Future AI APIs
 
 ---
 
 # Request Lifecycle
 
-Conversation Request
+```
+Client
 
 ↓
 
-Authentication Middleware
+Authentication
 
 ↓
 
-API Key Lookup
+Ownership Validation
 
 ↓
 
-Plan Resolution
+Rate Limiting
 
 ↓
 
-Dynamic Rate Limiting
-
-↓
-
-Business Route
+API Route
 
 ↓
 
@@ -207,11 +324,15 @@ Business Service
 
 ↓
 
+Pipeline
+
+↓
+
 Provider Registry
 
 ↓
 
-Speech / Translation / TTS
+AI Providers
 
 ↓
 
@@ -220,63 +341,128 @@ Usage Logging
 ↓
 
 Response
+```
 
 ---
 
-# Developer APIs
+# Platform APIs
 
-Identity
+## Customer APIs (JWT)
 
-GET /v1/me
+```
+/v1/customer/auth
+/v1/customer/projects
+/v1/customer/api-keys
+/v1/customer/dashboard
+/v1/customer/analytics
+/v1/customer/usage
+/v1/customer/profile
+```
 
-Usage
+---
 
-GET /v1/usage
+## AI APIs (API Key)
 
-Dashboard
+```
+/v1/ai/conversation
+/v1/ai/translate
+```
 
-GET /v1/dashboard
+---
 
-Plans
+## Platform APIs
 
-GET /v1/plans
-
-API Keys
-
-POST /v1/api-keys
+```
+/v1/platform/plans
+/v1/platform/health
+/v1/platform/status
+/v1/platform/version
+```
 
 ---
 
 # Engineering Principles
 
+- Layered Architecture
 - Repository Pattern
 - Service Layer
 - Provider Abstraction
-- Thin Routes
-- Typed Response Schemas
+- Pipeline Architecture
+- Thin API Layer
 - Dependency Injection
+- Project-based Multi-tenancy
+- Strong Ownership Validation
 - Single Responsibility Principle
 
 ---
 
-# Current Status
+# Current Platform Status
 
-Platform Foundation
-
-✅ Complete
-
-Developer Platform
+## Foundation
 
 ✅ Complete
 
-Platform Intelligence
+- Layered Architecture
+- API Versioning
+- Repository Pattern
+- Service Layer
+- Provider Registry
+- Conversation Pipeline
+
+---
+
+## Platform
+
+✅ Complete
+
+- JWT Authentication
+- API Key Authentication
+- Projects
+- API Keys
+- Usage Logging
+- Analytics
+- Customer Dashboard
+- Project Dashboard
+
+---
+
+## Developer Platform
 
 🚧 In Progress
 
-Commercial Platform
+- Developer Console
+- API Playground
+- Live Logs
+- SDKs
+
+---
+
+## Enterprise Platform
 
 ⏳ Planned
 
-Enterprise Platform
+- Organizations
+- Team Management
+- Billing
+- Audit Logs
+- Webhooks
+- Streaming APIs
+- Enterprise Infrastructure
 
-⏳ Planned
+---
+
+# Design Principles
+
+Nativee is built around three architectural principles.
+
+### 1. Human Identity
+
+Users authenticate with JWT to manage their account.
+
+### 2. Application Identity
+
+Applications authenticate using API Keys to access AI services.
+
+### 3. Project Isolation
+
+Every request, API Key, usage log, and analytic belongs to a project, providing strong isolation for security, billing, and scalability.

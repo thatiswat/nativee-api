@@ -1,13 +1,14 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from app.models.api_key import APIKey
+from app.models.project import Project
 from app.models.usage_log import UsageLog
 
 
 class UsageRepository:
-
     def __init__(
         self,
         db: Session,
@@ -34,19 +35,47 @@ class UsageRepository:
 
     def get_total_requests(
         self,
-        api_key_id: int,
+        project_id: int,
     ) -> int:
         return (
             self.db.query(UsageLog)
+            .join(APIKey, UsageLog.api_key_id == APIKey.id)
             .filter(
-                UsageLog.api_key_id == api_key_id,
+                APIKey.project_id == project_id,
+            )
+            .count()
+        )
+
+    def count_by_user(
+        self,
+        owner_id: int,
+    ) -> int:
+        return (
+            self.db.query(UsageLog)
+            .join(APIKey, UsageLog.api_key_id == APIKey.id)
+            .join(Project, APIKey.project_id == Project.id)
+            .filter(
+                Project.owner_id == owner_id,
+            )
+            .count()
+        )
+
+    def count_by_project(
+        self,
+        project_id: int,
+    ) -> int:
+        return (
+            self.db.query(UsageLog)
+            .join(APIKey, UsageLog.api_key_id == APIKey.id)
+            .filter(
+                APIKey.project_id == project_id,
             )
             .count()
         )
 
     def get_requests_today(
         self,
-        api_key_id: int,
+        project_id: int,
     ) -> int:
         today = datetime.utcnow().replace(
             hour=0,
@@ -57,8 +86,9 @@ class UsageRepository:
 
         return (
             self.db.query(UsageLog)
+            .join(APIKey, UsageLog.api_key_id == APIKey.id)
             .filter(
-                UsageLog.api_key_id == api_key_id,
+                APIKey.project_id == project_id,
                 UsageLog.created_at >= today,
             )
             .count()
@@ -66,7 +96,7 @@ class UsageRepository:
 
     def get_requests_this_month(
         self,
-        api_key_id: int,
+        project_id: int,
     ) -> int:
         """
         Returns total requests made this month.
@@ -82,8 +112,9 @@ class UsageRepository:
 
         return (
             self.db.query(UsageLog)
+            .join(APIKey, UsageLog.api_key_id == APIKey.id)
             .filter(
-                UsageLog.api_key_id == api_key_id,
+                APIKey.project_id == project_id,
                 UsageLog.created_at >= start_of_month,
             )
             .count()
@@ -91,14 +122,15 @@ class UsageRepository:
 
     def get_average_latency(
         self,
-        api_key_id: int,
+        project_id: int,
     ) -> float:
         average = (
             self.db.query(
                 func.avg(UsageLog.latency_ms),
             )
+            .join(APIKey, UsageLog.api_key_id == APIKey.id)
             .filter(
-                UsageLog.api_key_id == api_key_id,
+                APIKey.project_id == project_id,
             )
             .scalar()
         )
@@ -107,12 +139,13 @@ class UsageRepository:
 
     def get_success_rate(
         self,
-        api_key_id: int,
+        project_id: int,
     ) -> float:
         total = (
             self.db.query(UsageLog)
+            .join(APIKey, UsageLog.api_key_id == APIKey.id)
             .filter(
-                UsageLog.api_key_id == api_key_id,
+                APIKey.project_id == project_id,
             )
             .count()
         )
@@ -122,8 +155,9 @@ class UsageRepository:
 
         successful = (
             self.db.query(UsageLog)
+            .join(APIKey, UsageLog.api_key_id == APIKey.id)
             .filter(
-                UsageLog.api_key_id == api_key_id,
+                APIKey.project_id == project_id,
                 UsageLog.success.is_(True),
             )
             .count()

@@ -16,10 +16,7 @@ class ProjectService:
     # Helpers
     # ----------------------------------
 
-    def _generate_slug(
-        self,
-        name: str,
-    ) -> str:
+    def _generate_slug(self, name: str) -> str:
         """
         Convert project name into URL-friendly slug.
 
@@ -29,12 +26,10 @@ class ProjectService:
             "nativee-production"
         """
 
-        slug = (
+        return (
             sub(r"[^a-z0-9]+", "-", name.lower())
             .strip("-")
         )
-
-        return slug
 
     # ----------------------------------
     # Create
@@ -58,7 +53,7 @@ class ProjectService:
             )
 
         project = Project(
-            user_id=user_id,
+            owner_id=user_id,   # ✅ FIXED HERE
             name=name,
             slug=slug,
             description=description,
@@ -93,9 +88,7 @@ class ProjectService:
         self,
         user_id: int,
     ) -> list[Project]:
-        return self.repository.get_by_user(
-            user_id,
-        )
+        return self.repository.get_by_user(user_id)
 
     # ----------------------------------
     # Update

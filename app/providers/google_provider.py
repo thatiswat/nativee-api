@@ -1,8 +1,8 @@
 import time
 from functools import lru_cache
 
-from fastapi import HTTPException
 from deep_translator import GoogleTranslator
+from fastapi import HTTPException
 
 
 # ==========================================================
@@ -37,7 +37,7 @@ def _cached_translate(
 
 class GoogleProvider:
     """
-    Google Translation Provider
+    Google Translation Provider.
 
     Wrapped as a class so it can be registered
     inside ProviderRegistry.
@@ -58,11 +58,29 @@ class GoogleProvider:
                 target_language,
             )
 
-            elapsed = time.perf_counter() - start
+            if (
+                not translated
+                or translated.startswith("Error 500")
+                or "That's an error" in translated
+            ):
+                raise HTTPException(
+                    status_code=502,
+                    detail="Google Translate temporarily unavailable.",
+                )
 
-            print(f"🌍 Translation : {elapsed:.3f}s")
+            elapsed = (
+                time.perf_counter()
+                - start
+            )
+
+            print(
+                f"🌍 Translation : {elapsed:.3f}s"
+            )
 
             return translated
+
+        except HTTPException:
+            raise
 
         except Exception as exc:
             raise HTTPException(

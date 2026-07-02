@@ -1,118 +1,208 @@
+<<<<<<< HEAD
 
 # Nativee Platform
+=======
+# 🚀 Nativee Platform
+>>>>>>> 903ba11 (refactor: reorganize backend into scalable AI platform architecture)
 
-> AI infrastructure platform powering Nativee Mobile, Web, Developer Platform, and Enterprise integrations.
+> AI Infrastructure Platform for multilingual communication.
+>
+> Nativee enables developers and enterprises to integrate Speech Recognition, Translation, and Text-to-Speech through a scalable API platform.
 
 ---
 
+<<<<<<< HEAD
 # Overview
+=======
+# 🌍 Vision
+>>>>>>> 903ba11 (refactor: reorganize backend into scalable AI platform architecture)
 
-Nativee Platform is an AI infrastructure system designed to remove language barriers through Speech, Translation, and Voice technologies.
+Nativee is building the AI infrastructure layer for multilingual communication.
 
-The platform currently powers:
-
-- Nativee Mobile
-- Nativee Web
-- Developer Platform (Console)
-- Enterprise Integrations
+Our mission is to remove language barriers by providing production-ready APIs that power applications across mobile, web, enterprise, and AI agents.
 
 ---
 
+<<<<<<< HEAD
 # Technology Stack
+=======
+# 🏛 Platform Overview
+
+Nativee consists of two independent platform surfaces built on a shared backend.
+
+```text
+                 Nativee Platform
+                        │
+        ┌───────────────┴────────────────┐
+        │                                │
+        ▼                                ▼
+ Nativee Console                  Nativee AI Platform
+ (JWT Authentication)             (API Key Authentication)
+
+ Dashboard                        Conversation API
+ Projects                         Translation API
+ API Keys                         Future AI APIs
+ Analytics                        SDKs
+ Billing                          Enterprise Integrations
+```
+
+---
+
+# ⚙ Technology Stack
+>>>>>>> 903ba11 (refactor: reorganize backend into scalable AI platform architecture)
 
 ## Backend
+
 - FastAPI
+- Python 3.11+
 - PostgreSQL
 - SQLAlchemy
 - Alembic
-- Python 3.11+
-- Railway
 
 ## AI Runtime
+
 - Groq Whisper (Speech-to-Text)
 - Google Translation Provider
-- Edge TTS (Text-to-Speech)
+- Edge TTS
 - Provider Registry Architecture
 
-## Platform Layer
+## Infrastructure
+
+- Railway
+- Supabase PostgreSQL
 - JWT Authentication
 - API Key Authentication
-- Project-based Multi-tenancy
-- Dynamic Plans
-- Rate Limiting Engine
-- Usage Logging System
-- Analytics Engine
-- Customer Dashboard
-- Project Dashboard
 
 ---
 
+<<<<<<< HEAD
 # Platform Architecture
+=======
+# 🏗 Architecture
+>>>>>>> 903ba11 (refactor: reorganize backend into scalable AI platform architecture)
 
-The system follows a clean layered architecture:
+Nativee follows a layered architecture designed for long-term maintainability.
 
 ```text
-Routes
-    ↓
-Dependencies / Middleware
-    ↓
-Services
-    ↓
-Repositories
-    ↓
-Models
-    ↓
+HTTP Request
+      │
+      ▼
+API Layer
+      │
+Dependencies
+Middleware
+      │
+      ▼
+Service Layer
+      │
+      ▼
+Repository Layer
+      │
+      ▼
+Database Models
+      │
+      ▼
 PostgreSQL
-````
+```
 
-### Why this architecture?
+AI execution is handled independently through pipelines.
 
-* Separation of concerns
-* Scalable business logic layer
-* Independent database access layer
-* Easy testing and maintainability
-* Clean API boundaries
+```text
+Conversation API
+        │
+        ▼
+Conversation Pipeline
+        │
+ ┌──────┼────────┐
+ │      │        │
+ ▼      ▼        ▼
+STT  Translation  TTS
+        │
+        ▼
+Provider Registry
+```
 
 ---
 
+<<<<<<< HEAD
 # Core Domain Model
+=======
+# 🔐 Authentication Model
+>>>>>>> 903ba11 (refactor: reorganize backend into scalable AI platform architecture)
 
-The platform is built around a **Project-based multi-tenant architecture**:
+Nativee uses two authentication mechanisms with different responsibilities.
+
+## Customer Authentication (JWT)
+
+Used only for the Developer Console.
+
+Supports:
+
+- Login
+- Dashboard
+- Projects
+- API Keys
+- Analytics
+- Billing
+
+---
+
+## API Authentication (API Keys)
+
+Used only for AI APIs.
+
+Example:
+
+```http
+Authorization: Bearer ntv_live_xxxxxxxxxxxxxxxxx
+```
+
+Supports:
+
+- Conversation API
+- Translation API
+- Future AI APIs
+
+---
+
+# 🧠 Core Domain Model
 
 ```text
 User
-  │
-  ├── Project
-  │     ├── API Keys
-  │     ├── Usage Logs
-  │     ├── Analytics
-  │     └── Dashboards
+ │
+ ├── Projects
+ │      │
+ │      ├── API Keys
+ │      ├── Usage Logs
+ │      ├── Analytics
+ │      └── Dashboard
+ │
+ └── Billing
 ```
 
-### Key Principles
+### Design Principles
 
-* Users can own multiple projects
-* Each project isolates data and usage
-* API keys belong to projects (not users directly)
-* Usage and analytics are project-scoped
-* JWT defines user identity
-* API keys define execution access
+- Project-based multi-tenancy
+- Resource isolation
+- Project-scoped analytics
+- API key ownership
+- Usage-based billing foundation
 
 ---
 
+<<<<<<< HEAD
 # Core Resources
+=======
+# 📦 Platform Components
+>>>>>>> 903ba11 (refactor: reorganize backend into scalable AI platform architecture)
 
-* Users
-* Projects
-* API Keys
-* Plans
-* Usage Logs
-* Analytics
-* Dashboards
-* Identity System
+## Identity
 
----
+- JWT Authentication
+- API Key Authentication
+- Ownership Validation
 
+<<<<<<< HEAD
 # AI APIs
 
 * Conversation API
@@ -194,13 +284,23 @@ User
 * Customer Dashboard
 * Project Dashboard
 * Performance Metrics
+=======
+## Project Platform
+
+- Projects
+- API Keys
+- Plans
+- Usage
+- Analytics
+>>>>>>> 903ba11 (refactor: reorganize backend into scalable AI platform architecture)
 
 ## AI Runtime
 
-* Provider Registry
-* Groq Whisper Speech-to-Text
-* Google Translation API
-* Edge Text-to-Speech
+- Conversation Pipeline
+- Translation Pipeline
+- Provider Registry
+- Speech Processing
+- Text-to-Speech
 
 ---
 
@@ -208,7 +308,13 @@ User
 
 ```text
 app/
+│
 ├── api/
+│   └── v1/
+│       ├── customer/
+│       ├── ai/
+│       └── platform/
+│
 ├── core/
 ├── database/
 ├── dependencies/
@@ -217,36 +323,42 @@ app/
 ├── pipelines/
 ├── providers/
 ├── repositories/
-├── routes/
 ├── schemas/
+├── security/
 ├── services/
 ├── utils/
-└── main.py
+└── workers/
 
 migrations/
 ```
 
 ---
 
+<<<<<<< HEAD
 # Backend Status
+=======
+# 🌐 API Surfaces
+>>>>>>> 903ba11 (refactor: reorganize backend into scalable AI platform architecture)
 
-Current system supports:
+## Customer APIs
 
-* Authentication system
-* Project-based architecture
-* API key system
-* Usage tracking
-* Analytics engine
-* Customer dashboard
-* Project dashboard
-* AI runtime layer
-* Speech & Translation APIs
-* Health monitoring
+JWT Protected
+
+```text
+/v1/customer/auth
+/v1/customer/projects
+/v1/customer/api-keys
+/v1/customer/dashboard
+/v1/customer/analytics
+/v1/customer/usage
+/v1/customer/profile
+```
 
 ---
 
-# 🛣️ Roadmap
+## AI APIs
 
+<<<<<<< HEAD
 ## Phase 1 Foundation
 
 * Layered Architecture
@@ -278,6 +390,127 @@ Current system supports:
 ---
 
 # Run Locally
+=======
+API Key Protected
+
+```text
+/v1/ai/conversation
+/v1/ai/translate
+```
+
+---
+
+## Platform APIs
+
+```text
+/v1/platform/plans
+/v1/platform/health
+/v1/platform/status
+/v1/platform/version
+```
+
+---
+
+# 🔄 AI Runtime
+
+Current Providers
+
+| Capability | Provider |
+|------------|----------|
+| Speech Recognition | Groq Whisper |
+| Translation | Google |
+| Text-to-Speech | Edge TTS |
+
+Future providers can be added without changing business logic through the Provider Registry.
+
+---
+
+# 📊 Platform Features
+
+## Identity
+
+- JWT Login
+- API Key Authentication
+- Ownership Enforcement
+
+## Project Management
+
+- Multiple Projects
+- Project Isolation
+- API Key Management
+
+## Analytics
+
+- Usage Logging
+- Performance Metrics
+- Customer Dashboard
+- Project Dashboard
+
+## Platform
+
+- Dynamic Plans
+- Rate Limiting
+- Monthly Quotas
+- Health Monitoring
+
+---
+
+# 🚀 Current Status
+
+## Foundation ✅
+
+- Layered Architecture
+- Repository Pattern
+- Service Layer
+- Provider Registry
+- Conversation Pipeline
+- Project-based Multi-tenancy
+- API Versioning
+- Usage Logging
+- Analytics Engine
+- Customer Dashboard
+- Project Dashboard
+
+---
+
+# 🛣 Roadmap
+
+## Phase 2 — Developer Platform
+
+- Nativee Console
+- API Playground
+- Live Request Logs
+- Developer Documentation
+- SDK Downloads
+
+---
+
+## Phase 3 — Platform Expansion
+
+- Organizations
+- Team Management
+- Billing
+- Audit Logs
+- Webhooks
+- Python SDK
+- JavaScript SDK
+- Streaming APIs
+- Batch Processing
+
+---
+
+## Phase 4 — Enterprise
+
+- SSO
+- Private Deployments
+- Provider Failover
+- Enterprise Analytics
+- Dedicated Infrastructure
+
+---
+
+# 💻 Development
+>>>>>>> 903ba11 (refactor: reorganize backend into scalable AI platform architecture)
 
 ```bash
 python -m venv venv
@@ -293,6 +526,7 @@ uvicorn main:app --reload
 
 ---
 
+<<<<<<< HEAD
 # Deployment
 
 ## Production
@@ -317,13 +551,33 @@ Nativee Platform is evolving into a **fully multi-tenant AI developer platform**
 * Usage-based analytics
 * Scalable AI runtime
 * Developer-first APIs
+=======
+# 🌍 Deployment
 
+Production Services
+>>>>>>> 903ba11 (refactor: reorganize backend into scalable AI platform architecture)
+
+```text
+api.nativee.in
+console.nativee.in
+developer.nativee.in
+docs.nativee.in
+status.nativee.in
 ```
 
 ---
 
-If you want next upgrade, I can also create:
-- :contentReference[oaicite:0]{index=0}
-- or :contentReference[oaicite:1]{index=1}
-- or :contentReference[oaicite:2]{index=2}
-```
+# 🎯 Philosophy
+
+Nativee is designed as an AI infrastructure platform rather than a single AI application.
+
+The architecture emphasizes:
+
+- Scalability
+- Clear separation of concerns
+- Project-based multi-tenancy
+- Provider abstraction
+- Production-ready APIs
+- Developer-first experience
+
+Our goal is to provide a robust foundation for multilingual AI applications that can scale from individual developers to enterprise deployments.

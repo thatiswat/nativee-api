@@ -1,5 +1,9 @@
 from sqlalchemy.orm import Session
 
+from app.repositories.api_key_repository import APIKeyRepository
+from app.repositories.project_repository import ProjectRepository
+from app.repositories.usage_repository import UsageRepository
+
 from app.schemas.project_dashboard import (
     DashboardAPIKey,
     DashboardLimits,
@@ -7,14 +11,11 @@ from app.schemas.project_dashboard import (
     DashboardPlan,
     DashboardProject,
     DashboardResponse,
-    DashboardUsage,
     DashboardTimeRange,
+    DashboardUsage,
 )
 
-from app.services.usage_service import UsageService
 from app.models.user import User
-from app.models.project import Project
-from app.models.api_key import APIKey
 
 
 class ProjectDashboardService:
@@ -27,9 +28,15 @@ class ProjectDashboardService:
     - time-range aware metrics
     """
 
-    def __init__(self, db: Session):
+    def __init__(
+        self,
+        db: Session,
+    ):
         self.db = db
-        self.usage_service = UsageService(db)
+
+        self.project_repository = ProjectRepository(db)
+        self.api_key_repository = APIKeyRepository(db)
+        self.usage_repository = UsageRepository(db)
 
     def overview(
         self,
@@ -41,46 +48,44 @@ class ProjectDashboardService:
         # -----------------------------
         # 1. Validate project ownership
         # -----------------------------
-        project = (
-            self.db.query(Project)
-            .filter(Project.id == project_id)
-            .first()
+        project = self.project_repository.get_owned(
+            owner_id=user.id,
+            project_id=project_id,
         )
 
-        if not project or project.owner_id != user.id:
-            raise PermissionError("You do not have access to this project")
+        if project is None:
+            raise PermissionError(
+                "You do not have access to this project"
+            )
 
         # -----------------------------
         # 2. Optional API key (reporting only)
         # -----------------------------
         api_key = (
-            self.db.query(APIKey)
-            .filter(APIKey.project_id == project_id)
-            .first()
+            project.api_keys[0]
+            if project.api_keys
+            else None
         )
 
         plan = api_key.plan if api_key else None
 
         # -----------------------------
-        # 3. Usage metrics (time-aware, project scoped)
+        # 3. Usage metrics
         # -----------------------------
-        total_requests = self.usage_service.get_total_requests(
-            project_id=project_id,
-            time_range=time_range,
+        total_requests = self.usage_repository.get_total_requests(
+            project_id,
         )
 
-        requests_today = self.usage_service.get_requests_today(
-            project_id=project_id,
+        requests_today = self.usage_repository.get_requests_today(
+            project_id,
         )
 
-        average_latency = self.usage_service.get_average_latency(
-            project_id=project_id,
-            time_range=time_range,
+        average_latency = self.usage_repository.get_average_latency(
+            project_id,
         )
 
-        success_rate = self.usage_service.get_success_rate(
-            project_id=project_id,
-            time_range=time_range,
+        success_rate = self.usage_repository.get_success_rate(
+            project_id,
         )
 
         # -----------------------------

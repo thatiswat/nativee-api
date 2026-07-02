@@ -1,8 +1,8 @@
 import time
 
+from app.providers.edge_provider import text_to_speech
 from app.providers.groq_provider import speech_to_text
 from app.providers.registry import ProviderRegistry
-from app.providers.edge_provider import text_to_speech
 
 
 class ConversationPipeline:
@@ -12,18 +12,28 @@ class ConversationPipeline:
         audio_path: str,
         source_language: str,
         target_language: str,
-        context,
     ):
         pipeline_start = time.perf_counter()
 
-        # STT
+        # ---------------------------------------
+        # Speech-to-Text (STT)
+        # ---------------------------------------
+
         stt_start = time.perf_counter()
 
-        original = await speech_to_text(audio_path)
+        original = await speech_to_text(
+            audio_path,
+        )
 
-        stt_time = time.perf_counter() - stt_start
+        stt_time = (
+            time.perf_counter()
+            - stt_start
+        )
 
+        # ---------------------------------------
         # Translation
+        # ---------------------------------------
+
         translation_start = time.perf_counter()
 
         translated = await ProviderRegistry.translate(
@@ -37,13 +47,11 @@ class ConversationPipeline:
             - translation_start
         )
 
-        # Provider
+        provider = ProviderRegistry.current_provider()
 
-        context.provider = (
-            ProviderRegistry.current_provider()
-        )
-
-        # TTS
+        # ---------------------------------------
+        # Text-to-Speech (TTS)
+        # ---------------------------------------
 
         tts_start = time.perf_counter()
 
@@ -57,6 +65,10 @@ class ConversationPipeline:
             - tts_start
         )
 
+        # ---------------------------------------
+        # Total Pipeline Time
+        # ---------------------------------------
+
         pipeline_total = (
             time.perf_counter()
             - pipeline_start
@@ -66,6 +78,7 @@ class ConversationPipeline:
             "original": original,
             "translated": translated,
             "audio_output": audio_output,
+            "provider": provider,
             "stt": stt_time,
             "translation": translation_time,
             "tts": tts_time,

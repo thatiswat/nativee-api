@@ -1,5 +1,4 @@
-from fastapi import APIRouter
-from fastapi import Depends
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.database.dependencies import get_db
@@ -19,8 +18,6 @@ router = APIRouter(
     tags=["Projects"],
 )
 
-service = ProjectService
-
 
 # ==========================================================
 # Create Project
@@ -36,7 +33,9 @@ def create_project(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return service(db).create(
+    service = ProjectService(db)
+
+    return service.create(
         user_id=current_user.id,
         name=request.name,
         description=request.description,
@@ -56,15 +55,17 @@ def get_projects(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    service = ProjectService(db)
+
     return {
-        "projects": service(db).get_all(
+        "projects": service.get_all(
             current_user.id,
         )
     }
 
 
 # ==========================================================
-# Get Project
+# Get Project (SECURED)
 # ==========================================================
 
 @router.get(
@@ -74,13 +75,19 @@ def get_projects(
 )
 def get_project(
     project_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return service(db).get(project_id)
+    service = ProjectService(db)
+
+    return service.get(
+        user_id=current_user.id,
+        project_id=project_id,
+    )
 
 
 # ==========================================================
-# Update Project
+# Update Project (SECURED)
 # ==========================================================
 
 @router.patch(
@@ -91,9 +98,13 @@ def get_project(
 def update_project(
     project_id: int,
     request: UpdateProjectRequest,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return service(db).update(
+    service = ProjectService(db)
+
+    return service.update(
+        user_id=current_user.id,
         project_id=project_id,
         name=request.name,
         description=request.description,
@@ -101,7 +112,7 @@ def update_project(
 
 
 # ==========================================================
-# Delete Project
+# Delete Project (SECURED)
 # ==========================================================
 
 @router.delete(
@@ -111,6 +122,12 @@ def update_project(
 )
 def delete_project(
     project_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return service(db).delete(project_id)
+    service = ProjectService(db)
+
+    return service.delete(
+        user_id=current_user.id,
+        project_id=project_id,
+    )

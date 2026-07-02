@@ -37,13 +37,11 @@ async def save_upload_file(
 
 
 class ConversationService:
-
     async def process(
         self,
         db,
         api_key,
         request_id: str,
-        context,
         audio,
         source_language: str,
         target_language: str,
@@ -86,7 +84,6 @@ class ConversationService:
             audio_path=str(audio_path),
             source_language=source_language,
             target_language=target_language,
-            context=context,
         )
 
         audio_path.unlink(missing_ok=True)
@@ -108,19 +105,16 @@ class ConversationService:
         )
 
         # ---------------------------------------
-        # Usage Context
-        # ---------------------------------------
-
-        context.api_key = api_key
-        context.endpoint = "/conversation"
-        context.latency_ms = backend_total * 1000
-        context.success = True
-
-        # ---------------------------------------
         # Usage Logging
         # ---------------------------------------
 
-        UsageService(db).log(context)
+        UsageService(db).log(
+            api_key=api_key,
+            endpoint="/conversation",
+            provider=result.get("provider", "unknown"),
+            latency_ms=backend_total * 1000,
+            success=True,
+        )
 
         filename = Path(
             result["audio_output"]

@@ -94,7 +94,6 @@ async def conversation(
         db=db,
         api_key=api_key,
         request_id=request.state.id,
-        context=request.state.context,
         audio=audio,
         source_language=source_language,
         target_language=target_language,

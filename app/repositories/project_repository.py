@@ -15,9 +15,19 @@ class ProjectRepository:
         self,
         project: Project,
     ) -> Project:
+        print("PROJECT:", project.__dict__)
+
         self.db.add(project)
+
+        print("BEFORE COMMIT:", project.__dict__)
+
         self.db.commit()
+
+        print("AFTER COMMIT:", project.__dict__)
+
         self.db.refresh(project)
+
+        print("AFTER REFRESH:", project.__dict__)
 
         return project
 
@@ -37,14 +47,14 @@ class ProjectRepository:
 
     def get_owned(
         self,
-        user_id: int,
+        owner_id: int,
         project_id: int,
     ) -> Project | None:
         return (
             self.db.query(Project)
             .filter(
                 Project.id == project_id,
-                Project.user_id == user_id,
+                Project.owner_id == owner_id,
             )
             .first()
         )
@@ -69,17 +79,17 @@ class ProjectRepository:
         )
 
     # ----------------------------------
-    # User
+    # Owner scoped queries
     # ----------------------------------
 
     def get_by_user(
         self,
-        user_id: int,
+        owner_id: int,
     ) -> list[Project]:
         return (
             self.db.query(Project)
             .filter(
-                Project.user_id == user_id,
+                Project.owner_id == owner_id,
             )
             .order_by(
                 Project.created_at.desc(),
@@ -89,12 +99,12 @@ class ProjectRepository:
 
     def count_by_user(
         self,
-        user_id: int,
+        owner_id: int,
     ) -> int:
         return (
             self.db.query(Project)
             .filter(
-                Project.user_id == user_id,
+                Project.owner_id == owner_id,
             )
             .count()
         )

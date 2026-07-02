@@ -116,7 +116,10 @@ app.add_middleware(
 
 
 @app.middleware("http")
-async def benchmark(request: Request, call_next):
+async def benchmark(
+    request: Request,
+    call_next,
+):
 
     request.state.id = secrets.token_hex(4)
 
@@ -124,7 +127,9 @@ async def benchmark(request: Request, call_next):
 
     response = await call_next(request)
 
-    elapsed_ms = (time.perf_counter() - start) * 1000
+    elapsed_ms = (
+        time.perf_counter() - start
+    ) * 1000
 
     response.headers["X-Request-Time"] = f"{elapsed_ms:.2f}ms"
     response.headers["X-Request-ID"] = request.state.id
@@ -141,7 +146,7 @@ async def benchmark(request: Request, call_next):
 
 
 # ---------------------------------------------------------------------
-# Routes
+# API
 # ---------------------------------------------------------------------
 
 app.include_router(api_router)
@@ -177,7 +182,9 @@ async def root():
     tags=["Audio"],
     summary="Download Audio",
 )
-async def get_audio(filename: str):
+async def get_audio(
+    filename: str,
+):
 
     file_path = UPLOAD_DIR / filename
 
@@ -216,15 +223,24 @@ def custom_openapi():
         routes=app.routes,
     )
 
-    schema.setdefault("components", {})
+    schema.setdefault(
+        "components",
+        {},
+    )
 
     schema["components"]["securitySchemes"] = {
         "BearerAuth": {
             "type": "http",
             "scheme": "bearer",
-            "bearerFormat": "JWT / API Key",
+            "bearerFormat": "JWT",
         }
     }
+
+    schema["security"] = [
+        {
+            "BearerAuth": [],
+        }
+    ]
 
     app.openapi_schema = schema
 
