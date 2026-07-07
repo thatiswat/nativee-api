@@ -1,9 +1,4 @@
-from contextlib import asynccontextmanager
 import asyncio
-import secrets
-import time
-
-import httpx
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,11 +7,14 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.responses import FileResponse, ORJSONResponse
 
 from app.api.v1 import router as api_router
+from app.core.lifespan import lifespan
 from app.core.logger import logger
-from app.core.settings import GROQ_API_KEY, UPLOAD_DIR
-from app.database.session import SessionLocal
+from app.core.middleware import benchmark
+from app.core.settings import (
+    GROQ_API_KEY,
+    UPLOAD_DIR,
+)
 from app.schemas.root import RootResponse
-from app.services.plan_service import PlanService
 
 
 # ---------------------------------------------------------------------
@@ -24,37 +22,13 @@ from app.services.plan_service import PlanService
 # ---------------------------------------------------------------------
 
 if GROQ_API_KEY:
-    logger.info("Groq provider configured.")
-else:
-    logger.warning("Groq API key missing.")
-
-
-# ---------------------------------------------------------------------
-# Lifespan
-# ---------------------------------------------------------------------
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-
-    app.state.http = httpx.AsyncClient(
-        timeout=httpx.Timeout(30.0),
-        limits=httpx.Limits(
-            max_keepalive_connections=20,
-            max_connections=100,
-        ),
+    logger.info(
+        "Groq provider configured."
     )
-
-    db = SessionLocal()
-
-    try:
-        PlanService(db).seed_defaults()
-        logger.info("Default plans initialized.")
-    finally:
-        db.close()
-
-    yield
-
-    await app.state.http.aclose()
+else:
+    logger.warning(
+        "Groq API key missing."
+    )
 
 
 # ---------------------------------------------------------------------
@@ -109,47 +83,35 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 app.add_middleware(
     GZipMiddleware,
     minimum_size=1000,
 )
 
 
+# ---------------------------------------------------------------------
+# Request Benchmark Middleware
+# ---------------------------------------------------------------------
+
 @app.middleware("http")
-async def benchmark(
+async def benchmark_middleware(
     request: Request,
     call_next,
 ):
-
-    request.state.id = secrets.token_hex(4)
-
-    start = time.perf_counter()
-
-    response = await call_next(request)
-
-    elapsed_ms = (
-        time.perf_counter() - start
-    ) * 1000
-
-    response.headers["X-Request-Time"] = f"{elapsed_ms:.2f}ms"
-    response.headers["X-Request-ID"] = request.state.id
-
-    logger.info(
-        "[%s] %s %s %.2fms",
-        request.state.id,
-        request.method,
-        request.url.path,
-        elapsed_ms,
+    return await benchmark(
+        request,
+        call_next,
     )
 
-    return response
-
 
 # ---------------------------------------------------------------------
-# API
+# API Routes
 # ---------------------------------------------------------------------
 
-app.include_router(api_router)
+app.include_router(
+    api_router,
+)
 
 
 # ---------------------------------------------------------------------
@@ -189,16 +151,28 @@ async def get_audio(
     file_path = UPLOAD_DIR / filename
 
     if not file_path.exists():
+
         raise HTTPException(
             status_code=404,
             detail="Audio file not found",
         )
 
-    async def cleanup():
-        await asyncio.sleep(10)
-        file_path.unlink(missing_ok=True)
 
-    asyncio.create_task(cleanup())
+    async def cleanup():
+
+        await asyncio.sleep(
+            10,
+        )
+
+        file_path.unlink(
+            missing_ok=True,
+        )
+
+
+    asyncio.create_task(
+        cleanup(),
+    )
+
 
     return FileResponse(
         path=file_path,
@@ -216,6 +190,7 @@ def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
 
+
     schema = get_openapi(
         title=app.title,
         version=app.version,
@@ -223,24 +198,29 @@ def custom_openapi():
         routes=app.routes,
     )
 
+
     schema.setdefault(
         "components",
         {},
     )
 
+
     schema["components"]["securitySchemes"] = {
-        "BearerAuth": {
+
+        "CustomerJWT": {
             "type": "http",
             "scheme": "bearer",
             "bearerFormat": "JWT",
-        }
+        },
+
+        "APIKeyAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "API Key",
+        },
+
     }
 
-    schema["security"] = [
-        {
-            "BearerAuth": [],
-        }
-    ]
 
     app.openapi_schema = schema
 

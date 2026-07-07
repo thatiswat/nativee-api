@@ -8,7 +8,6 @@ from app.services.plan_service import PlanService
 
 router = APIRouter(
     prefix="/plans",
-    tags=["Plans"],
 )
 
 

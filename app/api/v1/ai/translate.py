@@ -4,18 +4,15 @@ from fastapi import (
 )
 
 from app.dependencies.api_key import require_api_key
+from app.engine.client import engine
 from app.models.api_key import APIKey
-from app.providers.edge_provider import text_to_speech
-from app.providers.registry import ProviderRegistry
 from app.schemas.error import ErrorResponse
 from app.schemas.translate import (
     TranslateRequest,
     TranslateResponse,
 )
 
-router = APIRouter(
-    tags=["Translation"],
-)
+router = APIRouter()
 
 
 @router.post(
@@ -23,16 +20,13 @@ router = APIRouter(
     response_model=TranslateResponse,
     summary="Translate Text",
     description="""
-Translate text between supported languages.
-
-Uses the configured translation provider through
-the Provider Registry.
+Translate text between supported languages using Nativeee Engine.
 
 Returns:
 
 - Original text
 - Translated text
-- Generated audio URL
+- Generated audio URL (if available)
 """,
     responses={
         400: {
@@ -62,26 +56,18 @@ async def translate_endpoint(
     api_key: APIKey = Depends(require_api_key),
 ):
     """
-    Translate text into another language and generate
-    speech for the translated result.
+    Translate text using Nativeee Engine.
     """
 
-    translated_text = await ProviderRegistry.translate(
-        request.text,
-        request.source_language,
-        request.target_language,
+    result = await engine.translate(
+        text=request.text,
+        source_language=request.source_language,
+        target_language=request.target_language,
     )
-
-    audio_path = await text_to_speech(
-        translated_text,
-        request.target_language,
-    )
-
-    filename = audio_path.split("/")[-1]
 
     return TranslateResponse(
         success=True,
-        original=request.text,
-        translated=translated_text,
-        audio_url=f"/audio/{filename}",
+        original=result["original"],
+        translated=result["translated"],
+        audio_url=result.get("audio_url"),
     )

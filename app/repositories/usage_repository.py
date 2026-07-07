@@ -22,12 +22,9 @@ class UsageRepository:
     def create(
         self,
         usage: UsageLog,
-    ) -> UsageLog:
+    ) -> None:
         self.db.add(usage)
         self.db.commit()
-        self.db.refresh(usage)
-
-        return usage
 
     # --------------------------------------------------
     # Read

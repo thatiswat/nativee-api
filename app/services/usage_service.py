@@ -29,7 +29,7 @@ class UsageService:
         provider: str,
         latency_ms: float,
         success: bool,
-    ) -> UsageLog:
+    ) -> None:
         """
         Log a single API request.
         """
@@ -42,7 +42,7 @@ class UsageService:
             success=success,
         )
 
-        return self.repository.create(usage)
+        self.repository.create(usage)
 
     # --------------------------------------------------
     # Read paths (PROJECT scoped)

@@ -15,26 +15,51 @@ from app.repositories.user_repository import UserRepository
 from app.utils.crypto import hash_api_key
 
 
-security = HTTPBearer(
+# ==========================================================
+# Separate Security Schemes
+# ==========================================================
+
+# Customer Console Authentication
+# Used with:
+# Authorization: Bearer <JWT>
+
+jwt_security = HTTPBearer(
+    scheme_name="CustomerJWT",
+    auto_error=False,
+)
+
+
+# Developer API Authentication
+# Used with:
+# Authorization: Bearer ntv_live_xxxxxxxxx
+
+api_key_security = HTTPBearer(
+    scheme_name="APIKeyAuth",
     auto_error=False,
 )
 
 
 # ==========================================================
-# API KEY AUTH (Developer / Service Auth)
+# API KEY AUTH
+# Developer / Service Authentication
 # ==========================================================
 
 async def require_api_key(
     credentials: HTTPAuthorizationCredentials | None = Depends(
-        security,
+        api_key_security,
     ),
     db: Session = Depends(get_db),
 ):
     """
-    Authenticate requests using a Bearer API key.
+    Authenticate requests using a Nativee API Key.
 
     Expected header:
-        Authorization: Bearer <api_key>
+
+        Authorization: Bearer ntv_live_xxxxxxxxx
+
+    Used by:
+
+        /v1/ai/*
     """
 
     if credentials is None:
@@ -45,9 +70,13 @@ async def require_api_key(
 
     api_key = credentials.credentials
 
-    key_hash = hash_api_key(api_key)
+    key_hash = hash_api_key(
+        api_key,
+    )
 
-    repository = APIKeyRepository(db)
+    repository = APIKeyRepository(
+        db,
+    )
 
     record = repository.get_by_hash(
         key_hash,
@@ -69,20 +98,26 @@ async def require_api_key(
 
 
 # ==========================================================
-# JWT AUTH (User Auth)
+# JWT AUTH
+# Customer Authentication
 # ==========================================================
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(
-        security,
+        jwt_security,
     ),
     db: Session = Depends(get_db),
 ):
     """
-    Authenticate requests using a JWT Bearer token.
+    Authenticate customer requests using JWT.
 
     Expected header:
+
         Authorization: Bearer <jwt_token>
+
+    Used by:
+
+        /v1/customer/*
     """
 
     if credentials is None:

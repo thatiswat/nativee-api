@@ -6,17 +6,21 @@ from fastapi import (
     Request,
     UploadFile,
 )
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.database.dependencies import get_db
-from app.dependencies.api_key import require_api_key
+from app.dependencies.auth import require_api_key
 from app.schemas.conversation import ConversationResult
 from app.schemas.error import ErrorResponse
 from app.services.conversation_service import ConversationService
 
+
 router = APIRouter(
-    tags=["Speech"],
+    prefix="/ai",
+    tags=["AI"],
 )
+
 
 conversation_service = ConversationService()
 
@@ -32,17 +36,19 @@ conversation_service = ConversationService()
     description="""
 Convert speech into another language.
 
-Pipeline
+Authentication:
 
-Speech → Text
+Authorization: Bearer ntv_live_xxxxxxxxx
 
+Pipeline:
+
+Speech
 ↓
-
+Text Recognition
+↓
 Translation
-
 ↓
-
-Text → Speech
+Text To Speech
 
 Returns:
 
@@ -58,7 +64,7 @@ Returns:
         },
         401: {
             "model": ErrorResponse,
-            "description": "Unauthorized",
+            "description": "Invalid or missing API key",
         },
         403: {
             "model": ErrorResponse,
@@ -66,7 +72,7 @@ Returns:
         },
         429: {
             "model": ErrorResponse,
-            "description": "Rate limit or monthly quota exceeded",
+            "description": "Rate limit or quota exceeded",
         },
         500: {
             "model": ErrorResponse,
@@ -83,17 +89,46 @@ async def conversation(
     target_language: str = Form(...),
 ):
     """
-    Process a multilingual speech conversation.
+    Process multilingual speech conversion.
 
-    Accepts an audio file, performs speech recognition,
-    translates the transcript, synthesizes translated
-    speech, and returns the complete conversation result.
+    Uses API Key authentication.
     """
 
     return await conversation_service.process(
         db=db,
         api_key=api_key,
         request_id=request.state.id,
+        audio=audio,
+        source_language=source_language,
+        target_language=target_language,
+    )
+
+
+# ==========================================================
+# Streaming Speech Conversation
+# ==========================================================
+
+@router.post(
+    "/conversation/stream",
+    response_class=StreamingResponse,
+    summary="Streaming Speech Conversation",
+    description="""
+Real-time multilingual speech translation.
+
+Returns translated audio as a streaming MP3 directly from
+Nativeee Engine.
+""",
+)
+async def conversation_stream(
+    api_key=Depends(require_api_key),
+    db: Session = Depends(get_db),
+    audio: UploadFile = File(...),
+    source_language: str = Form(...),
+    target_language: str = Form(...),
+):
+    return await conversation_service.process_stream(
+        db=db,
+        api_key=api_key,
         audio=audio,
         source_language=source_language,
         target_language=target_language,
