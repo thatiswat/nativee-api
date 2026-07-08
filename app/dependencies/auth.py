@@ -8,6 +8,8 @@ from fastapi.security import (
     HTTPBearer,
 )
 
+from jose import JWTError
+
 from sqlalchemy.orm import Session
 
 from app.database.dependencies import (
@@ -129,6 +131,11 @@ async def get_current_user(
             credentials.credentials,
         )
 
+        print(
+            "JWT PAYLOAD:",
+            payload,
+        )
+
         return IdentityClaims(
             id=int(
                 payload["sub"],
@@ -141,9 +148,26 @@ async def get_current_user(
             is_active=payload["is_active"],
         )
 
-    except Exception:
+    except JWTError as e:
+
+        print(
+            "JWT ERROR:",
+            str(e),
+        )
 
         raise HTTPException(
             status_code=401,
-            detail="Invalid token",
+            detail=str(e),
+        )
+
+    except Exception as e:
+
+        print(
+            "AUTH ERROR:",
+            str(e),
+        )
+
+        raise HTTPException(
+            status_code=401,
+            detail=str(e),
         )
