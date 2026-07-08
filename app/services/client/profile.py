@@ -2,21 +2,22 @@ from app.schemas.client.profile import (
     ClientProfileResponse,
 )
 
+from app.schemas.shared.identity import (
+    IdentityClaims,
+)
+
 
 class ClientProfileService:
 
     def profile(
         self,
-        user: dict,
+        user: IdentityClaims,
     ) -> ClientProfileResponse:
 
         return ClientProfileResponse(
-            id=user["sub"],
-            email=user.get("email"),
-            name=user.get("user_metadata", {}).get("name"),
-            avatar=user.get("user_metadata", {}).get("avatar_url"),
-            primary_language=user.get(
-                "user_metadata",
-                {},
-            ).get("primary_language"),
+            id=user.public_id,
+            email=user.email,
+            name=user.name,
+            avatar=None,
+            primary_language=None,
         )

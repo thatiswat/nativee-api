@@ -1,7 +1,11 @@
 from fastapi import APIRouter, Depends
 
-from app.dependencies.supabase import (
-    get_current_client,
+from app.dependencies.auth import (
+    get_current_user,
+)
+
+from app.schemas.shared.identity import (
+    IdentityClaims,
 )
 
 from app.services.client.profile import (
@@ -16,11 +20,10 @@ router = APIRouter(
 
 @router.get("")
 async def profile(
-    user=Depends(
-        get_current_client,
+    user: IdentityClaims = Depends(
+        get_current_user,
     ),
 ):
-
     service = ClientProfileService()
 
     return {
