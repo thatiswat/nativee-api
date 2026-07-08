@@ -1,81 +1,99 @@
 # 🛣 Nativee Platform Roadmap
 
-> Building India's AI infrastructure for multilingual communication.
+> Building the infrastructure powering multilingual AI applications.
 
 ---
 
 # Phase 1 — Platform Foundation ✅
 
-Status: Complete
+**Status:** Completed
 
-Established the core backend architecture and AI runtime.
+Established the technical foundation of the Nativee Platform.
 
-## Core Platform
+## Nativee Identity
+
+- RS256 Authentication
+- User Registration
+- Login
+- Refresh Tokens
+- Session Management
+- JWT Verification
+- Independent Identity Service
+- Independent PostgreSQL Database
+
+---
+
+## Nativee API
 
 - Layered Architecture
-- API Versioning
-- Customer API
-- AI API
-- Platform API
 - Repository Pattern
 - Service Layer
-- Provider Registry
-- Conversation Pipeline
-
----
-
-## Identity
-
-- JWT Authentication
-- API Key Authentication
-- Project-based Multi-tenancy
-- Ownership Validation
-
----
-
-## Platform
-
-- Projects
-- API Keys
-- Usage Logging
-- Analytics Engine
-- Customer Dashboard
-- Project Dashboard
-- Dynamic Plans
-- Rate Limiting
-
----
-
-## AI Runtime
-
-- Groq Whisper (Speech-to-Text)
-- Google Translation
-- Edge Text-to-Speech
-
----
-
-# Phase 2 — Developer Platform 🚧
-
-Status: In Progress
-
-Deliver a world-class developer experience.
-
-## Nativee Console
-
-- Dashboard
+- Dependency Injection
 - Project Management
 - API Key Management
-- Usage Dashboard
-- Analytics Dashboard
+- Usage Tracking
+- Analytics
+- Plans
+- Dashboard APIs
+- Engine Gateway
+
+---
+
+## Nativee Engine
+
+- Speech Recognition
+- Translation
+- Voice Synthesis
+- Streaming Pipeline
+- Provider Registry
+- Performance Benchmarking
+
+---
+
+## Infrastructure
+
+- Railway Deployments
+- Independent Services
+- Independent Databases
+- OpenAPI Documentation
+- Environment Isolation
+
+---
+
+# Phase 2 — Platform Experience 🚧
+
+**Status:** In Progress
+
+Deliver a seamless onboarding experience for developers.
+
+## Identity Integration
+
+- Automatic Business User Provisioning
+- Starter Plan Assignment
+- Default Workspace Creation
+- Identity Synchronization
+
+---
+
+## Developer Console
+
+- Dashboard
+- Profile
+- Projects
+- API Keys
+- Usage
+- Analytics
+- Settings
 
 ---
 
 ## Developer Experience
 
-- API Playground
-- Interactive Documentation
-- Live Request Logs
-- SDK Downloads
+- Interactive API Playground
+- Live API Testing
+- Quick Start Guides
+- Example Applications
+- Error Diagnostics
 
 ---
 
@@ -83,124 +101,156 @@ Deliver a world-class developer experience.
 
 - Python SDK
 - JavaScript SDK
-- Node.js SDK
+- TypeScript SDK
+- CLI
 
 ---
 
-## Platform APIs
+# Phase 3 — Multi-Tenant Platform
 
-- Models API
-- Version API
-- Health API
+**Status:** Planned
+
+Transform Nativee into a collaborative SaaS platform.
+
+## Organizations
+
+- Organizations
+- Workspaces
+- Members
+- Invitations
+- Roles
+- Permissions
 
 ---
 
-# Phase 3 — Commercial Platform
+## Collaboration
 
-Status: Planned
+- Shared Projects
+- Team API Keys
+- Shared Analytics
+- Team Usage
+- Workspace Settings
 
-Transform Nativee into a production SaaS platform.
+---
+
+## Security
+
+- Role-Based Access Control
+- Audit Logs
+- Session Management
+- Security Events
+
+---
+
+# Phase 4 — Commercial Platform
+
+**Status:** Planned
+
+Introduce billing and commercial capabilities.
 
 ## Billing
 
 - Subscription Plans
-- Usage-based Billing
-- Invoice Generation
+- Usage-Based Billing
+- Monthly Invoices
 - Payment Integration
 - Billing Dashboard
 
 ---
 
-## Platform Management
+## Platform Controls
 
 - API Key Scopes
 - Monthly Quotas
-- Soft & Hard Limits
-- Project Settings
+- Rate Limits
+- Budget Controls
+- Spending Alerts
 
 ---
 
-## Developer Tools
+## Developer Platform
 
 - Webhooks
-- Audit Logs
+- Audit APIs
+- Event System
 - API Explorer
 
 ---
 
-# Phase 4 — AI Infrastructure
+# Phase 5 — AI Infrastructure
 
-Status: Planned
+**Status:** Planned
 
-Build Nativee's proprietary AI infrastructure.
+Build Nativee's intelligent AI runtime.
 
 ## Translation
 
-- IndicTrans2 Integration
-- Nativee Translation Engine
-- Automatic Provider Routing
+- IndicTrans2
+- Automatic Model Routing
 - Provider Failover
+- Translation Memory
 
 ---
 
 ## Speech
 
-- Streaming Conversation
-- Real-time Speech Translation
+- Real-Time Streaming
 - Voice Activity Detection
 - Speaker Identification
+- Streaming Translation
 
 ---
 
 ## Performance
 
 - Intelligent Caching
-- Batch Translation
-- Queue Processing
-- GPU Acceleration
-- Benchmarking Framework
+- Batch Processing
+- GPU Scheduling
+- Benchmark Framework
+- Model Selection
 
 ---
 
-# Phase 5 — Enterprise Platform
+# Phase 6 — Enterprise Platform
 
-Status: Planned
+**Status:** Planned
 
 Enable enterprise-scale deployments.
 
-## Organizations
+## Enterprise Identity
 
-- Organizations
-- Teams
-- Members
-- Roles & Permissions
+- Single Sign-On
+- OAuth
+- SAML
+- SCIM
+- Enterprise Sessions
 
 ---
 
-## Enterprise Features
+## Enterprise Security
 
-- SSO (OAuth / SAML)
-- Private API Keys
-- Audit Trails
+- Private Deployments
 - Dedicated Infrastructure
-- Enterprise Analytics
+- Audit Trails
+- Compliance
+- Data Residency
 
 ---
 
-## Integrations
+## Enterprise Analytics
 
-- Slack
-- Microsoft Teams
-- Zapier
-- CRM Integrations
+- Organization Dashboards
+- Cost Analytics
+- Team Analytics
+- Performance Monitoring
 
 ---
 
-# Phase 6 — Nativee Ecosystem
+# Phase 7 — Nativee Ecosystem
 
-Status: Future
+**Status:** Future
 
-Expand Nativee into a complete AI ecosystem.
+Expand Nativee into a complete AI developer ecosystem.
 
 ## AI Platform
 
@@ -212,43 +262,93 @@ Expand Nativee into a complete AI ecosystem.
 
 ---
 
-## Infrastructure
+## Developer Ecosystem
 
-- Multi-region Deployment
-- Auto-scaling
+- Community SDKs
+- Templates
+- Starter Projects
+- Marketplace
+- Open Integrations
+
+---
+
+## Global Infrastructure
+
+- Multi-Region Deployment
 - Edge Inference
 - Global CDN
 - Provider Federation
+- Auto Scaling
 
 ---
 
-## Developer Community
-
-- Open-source SDKs
-- Sample Applications
-- Templates
-- Community Plugins
-- Marketplace
-
----
-
-# Long-Term Vision
+# Platform Evolution
 
 ```text
-                 Nativee Platform
-                        │
-        ┌───────────────┼────────────────┐
-        │               │                │
-        ▼               ▼                ▼
-  Nativee Console   AI Platform     Enterprise
-        │               │                │
-        └───────────────┼────────────────┘
-                        ▼
-              Multilingual AI Infrastructure
+                Nativee Platform
+
+        Foundation
+             │
+             ▼
+      Identity Platform
+             │
+             ▼
+     Developer Platform
+             │
+             ▼
+     Multi-Tenant Platform
+             │
+             ▼
+     Commercial Platform
+             │
+             ▼
+      AI Infrastructure
+             │
+             ▼
+     Enterprise Platform
+             │
+             ▼
+      Nativee Ecosystem
 ```
+
+---
+
+# Current Milestones
+
+## ✅ Completed
+
+- Nativee Identity
+- Nativee API
+- Nativee Engine
+- Distributed Architecture
+- RS256 Authentication
+- Railway Deployments
+- Independent Databases
+- Project Management
+- API Key Platform
+- Plans
+- Usage Tracking
+- Analytics
+- AI Gateway
+
+---
+
+## 🚧 Currently Building
+
+- Automatic Business User Provisioning
+- Developer Console
+- SDK Foundations
+- Documentation
+- Platform Architecture Documentation
+
+---
+
+# Vision
+
+Nativee provides the foundational infrastructure for building multilingual AI applications through independent platform services, secure authentication, developer-first APIs, and scalable AI execution.
 
 ---
 
 # Mission
 
-Nativee aims to become the foundational AI platform for multilingual communication by providing scalable, developer-first APIs that power applications across mobile, web, enterprise, and AI agents.
+Build the most trusted developer platform for multilingual AI by combining secure identity, scalable platform services, and high-performance AI infrastructure into a unified ecosystem.

@@ -1,70 +1,145 @@
 # Nativee API
 
-The developer platform for building multilingual AI applications.
+The business platform powering the Nativee ecosystem.
 
-Nativee API provides authentication, API key management, projects, usage tracking, analytics, billing foundations, and a unified interface to the Nativeee Engine.
+Nativee API provides project management, API key management, plans, usage tracking, analytics, developer resources, and acts as the gateway between applications and the Nativee Engine.
 
-The API itself does **not** perform AI inference. All speech recognition, translation, and voice synthesis are delegated to the Nativeee Engine.
+Authentication is handled by **Nativee Identity** using RS256 JWTs. Nativee API verifies Identity-issued tokens and never stores passwords or issues authentication tokens.
 
 ---
 
-## Architecture
+# Overview
 
 ```
                     Nativee Platform
 
-                  Mobile / Web / SDKs
-                          │
-                          ▼
-                    Nativee API
-┌─────────────────────────────────────────────────────┐
-│ Authentication (JWT)                                │
-│ API Key Validation                                  │
-│ Projects                                             │
-│ Plans                                                │
-│ Usage & Analytics                                    │
-│ Rate Limiting & Quotas                               │
-│ Engine Client                                        │
-└───────────────────────┬─────────────────────────────┘
-                        │
-                 Internal HTTP
-                        │
-                        ▼
-                  Nativeee Engine
-┌─────────────────────────────────────────────────────┐
-│ Speech Recognition                                  │
-│ Translation                                         │
-│ Voice Synthesis                                     │
-│ Streaming                                           │
-│ Provider Abstraction                                │
-│ Performance Profiling                               │
-└───────────────────────┬─────────────────────────────┘
-                        │
-              Groq • Google • Edge
+             Mobile • Web • SDKs • CLI
+                       │
+                       ▼
+               Nativee Identity
+        Authentication • Sessions • JWT
+                       │
+                 RS256 Access Token
+                       │
+                       ▼
+                  Nativee API
+┌──────────────────────────────────────────────────────┐
+│ Business Users                                       │
+│ Projects                                              │
+│ API Keys                                              │
+│ Plans                                                 │
+│ Usage Tracking                                        │
+│ Analytics                                             │
+│ Dashboard                                             │
+│ Rate Limiting                                         │
+│ Engine Client                                         │
+└────────────────────────┬─────────────────────────────┘
+                         │
+                   Internal HTTP
+                         │
+                         ▼
+                  Nativee Engine
+┌──────────────────────────────────────────────────────┐
+│ Speech Recognition                                   │
+│ Translation                                          │
+│ Voice Synthesis                                      │
+│ Streaming                                            │
+│ AI Providers                                         │
+│ Performance Optimization                             │
+└────────────────────────┬─────────────────────────────┘
+                         │
+              Groq • Google • Edge • Future Providers
 ```
 
 ---
 
-## Features
+# Responsibilities
 
-### Customer Platform
+Nativee API is responsible for:
 
-- Customer Authentication (JWT)
+- Business User Management
 - Project Management
-- API Key Management
+- API Key Lifecycle
+- Subscription Plans
 - Usage Tracking
 - Analytics
-- Plans
 - Dashboard APIs
+- Rate Limits & Quotas
+- Engine Orchestration
 
-### AI Platform
+Nativee API is **not responsible for**:
+
+- User Authentication
+- Password Storage
+- Session Management
+- Token Generation
+
+These responsibilities belong exclusively to **Nativee Identity**.
+
+---
+
+# Authentication
+
+Customer authentication is delegated to Nativee Identity.
+
+```
+User
+
+↓
+
+Nativee Identity
+
+↓
+
+RS256 JWT
+
+↓
+
+Nativee API
+
+↓
+
+JWT Verification
+
+↓
+
+Business User
+
+↓
+
+Projects
+```
+
+The API verifies:
+
+- Signature
+- Issuer
+- Audience
+- Token Type
+
+before serving protected resources.
+
+---
+
+# Features
+
+## Developer Platform
+
+- Projects
+- API Keys
+- Usage Tracking
+- Analytics
+- Dashboard
+- Subscription Plans
+
+## AI Platform
 
 - Speech Conversation
-- Text Translation
-- Streaming Speech
-- Audio Delivery
+- Translation
+- Streaming Audio
+- Engine Gateway
 
-### Platform
+## Platform
 
 - Health Monitoring
 - Version Discovery
@@ -73,46 +148,46 @@ The API itself does **not** perform AI inference. All speech recognition, transl
 
 ---
 
-## API Endpoints
+# API Resources
 
-### AI
-
-```
-POST /v1/ai/conversation
-POST /v1/ai/translate
-```
-
-### Customer
+## Console
 
 ```
-Authentication
 Projects
 API Keys
+Plans
 Dashboard
 Usage
 Analytics
 ```
 
-### Platform
+## AI
 
 ```
-GET /v1/platform/health
-GET /v1/platform/version
-GET /v1/platform/plans
+POST /ai/conversation
+POST /ai/translate
+```
+
+## Platform
+
+```
+Health
+Version
+OpenAPI
 ```
 
 ---
 
-## Engine Integration
+# Engine Integration
 
-Nativeee API communicates with the Nativeee Engine over HTTP.
+Nativee API communicates with Nativee Engine using internal HTTP.
 
 ```
 Developer
 
 ↓
 
-Nativeee API
+Nativee API
 
 ↓
 
@@ -120,20 +195,18 @@ Engine Client
 
 ↓
 
-Nativeee Engine
+Nativee Engine
 
 ↓
 
-Groq
-Google
-Edge
+AI Providers
 ```
 
-This architecture allows the Engine to evolve independently without changing the public API.
+This separation allows the Engine to evolve independently without changing the public API.
 
 ---
 
-## Current AI Pipeline
+# Current AI Pipeline
 
 ```
 Audio
@@ -152,45 +225,54 @@ Voice Synthesis
 
 ↓
 
-Audio Response
+Streaming Audio
 ```
 
 ---
 
-## Performance
+# Performance
 
-Current average local performance:
+Current local performance
 
 | Stage | Average |
 |--------|---------:|
 | Speech Recognition | ~300–500 ms |
 | Translation | ~40–900 ms |
-| First Audio (TTFA) | ~600–800 ms |
+| First Audio | ~600–800 ms |
 | Engine Pipeline | ~1.1 s |
 
 ---
 
-## Security
+# Security
 
-### Customer Console
+## Customer Console
 
-Uses JWT authentication.
+Authentication uses Identity-issued RS256 JWTs.
 
 ```
-Authorization: Bearer <JWT>
+Authorization: Bearer <access_token>
 ```
 
-### AI APIs
+## AI APIs
 
-Uses Nativeee API Keys.
+Authentication uses Nativee API Keys.
 
 ```
 Authorization: Bearer ntv_live_xxxxxxxxx
 ```
 
+Nativee API validates:
+
+- JWT Signature
+- Issuer
+- Audience
+- API Key Status
+- Project Ownership
+- Rate Limits
+
 ---
 
-## Running Locally
+# Local Development
 
 ```bash
 git clone https://github.com/nativeee/nativeee-api
@@ -203,65 +285,109 @@ source venv/bin/activate
 
 pip install -r requirements.txt
 
-python -m uvicorn app.main:app --reload
+uvicorn main:app --reload
 ```
 
 Swagger
 
 ```
-http://127.0.0.1:8000/docs
+http://127.0.0.1:8001/docs
 ```
 
 ---
 
-## Environment Variables
+# Environment Variables
 
-```
+```env
 DATABASE_URL=
 
-JWT_SECRET_KEY=
+ENGINE_URL=
+
+IDENTITY_URL=
+
+IDENTITY_PUBLIC_KEY=
+
+IDENTITY_ISSUER=
+
+IDENTITY_AUDIENCE=
+
+IDENTITY_ALGORITHM=RS256
 
 GROQ_API_KEY=
-
-ENGINE_URL=http://127.0.0.1:8001
 ```
 
 ---
 
-## Companion Project
-
-Nativeee API relies on the Nativeee Engine for AI inference.
+# Companion Services
 
 ```
-nativeee-api
-        │
-        ▼
-nativeee-engine
+                Nativee Platform
+
+          ┌────────────────────┐
+          │ Nativee Identity   │
+          │ Authentication     │
+          └─────────┬──────────┘
+                    │
+             RS256 JWT
+                    │
+          ┌─────────▼──────────┐
+          │  Nativee API       │
+          │ Business Platform  │
+          └─────────┬──────────┘
+                    │
+          Internal HTTP
+                    │
+          ┌─────────▼──────────┐
+          │ Nativee Engine     │
+          │ AI Runtime         │
+          └────────────────────┘
 ```
-
-The Engine is responsible for:
-
-- Speech Recognition
-- Translation
-- Voice Synthesis
-- Streaming
-- AI Provider Management
-- Performance Optimization
 
 ---
 
-## Roadmap
+# Current Status
 
-- Streaming Conversation API
-- SDKs (Python & JavaScript)
-- Billing
+- ✅ Nativee Identity Integration
+- ✅ RS256 Authentication
+- ✅ Project Management
+- ✅ API Key Management
+- ✅ Plans
+- ✅ Usage Tracking
+- ✅ Analytics
+- ✅ Engine Integration
+- ✅ Railway Deployment
+
+---
+
+# Roadmap
+
+### Platform
+
+- Automatic Business User Provisioning
 - Organizations & Teams
-- Enterprise Features
-- Additional AI APIs
-- Monitoring & Observability
+- Role-Based Access Control
+- Billing & Subscriptions
+- Audit Logs
+
+### Developer Experience
+
+- Python SDK
+- JavaScript SDK
+- CLI
+- Webhooks
+
+### AI Platform
+
+- Streaming Conversations
+- Additional AI Providers
+- Model Routing
+- Observability
 
 ---
 
-## License
+# License
 
-Proprietary © Nativee Technologies
+**Proprietary Software**
+
+Copyright © Nativee Technologies.
+All rights reserved.

@@ -1,182 +1,164 @@
 # Nativee Platform Architecture
 
----
+The Nativee Platform is a distributed, service-oriented architecture designed to separate authentication, business logic, and AI execution into independent services.
 
-# Philosophy
-
-Nativee separates platform infrastructure from AI execution.
-
-The platform is responsible for authentication, project management, API key management, usage tracking, analytics, billing foundations, and request authorization.
-
-AI execution is delegated to the Nativee Engine.
-
-Every layer has a single responsibility and communicates only with adjacent layers.
+Each service owns a single responsibility and communicates through well-defined interfaces, enabling independent deployment, scaling, and evolution.
 
 ---
 
-# Platform Architecture
+# Platform Overview
 
 ```text
                            Nativee Platform
 
-                ┌────────────────────────────────┐
-                │        Nativee Console         │
-                │        (JWT Protected)         │
-                └───────────────┬────────────────┘
-                                │
-                                │
-                ┌───────────────▼────────────────┐
-                │          Nativee API          │
-                │      (API Key Protected)      │
-                └───────────────┬────────────────┘
-                                │
-                                ▼
-                    Authentication & Authorization
-                                │
-                                ▼
-                     Ownership & Rate Limiting
-                                │
-                                ▼
-                            API Layer
-                                │
-                                ▼
-                        Business Services
-                                │
-                                ▼
-                    Nativee Engine Client
-                                │
-                                ▼
-                         Nativee Engine
-                                │
-                                ▼
-                          Usage Logging
-                                │
-                                ▼
-                            PostgreSQL
+                Mobile • Web • SDKs • CLI
+                         │
+                         ▼
+                 Nativee Identity
+        Authentication • Sessions • JWT
+                         │
+                  RS256 Access Token
+                         │
+          ┌──────────────┴──────────────┐
+          ▼                             ▼
+     Nativee API                 Nativee Engine
+ Business Platform               AI Runtime
+          │                             │
+          ▼                             ▼
+ PostgreSQL                     AI Providers
 ```
 
 ---
 
-# Folder Structure
+# Service Responsibilities
 
-```text
-app/
+## Nativee Identity
 
-├── api/
-│   └── v1/
-│       ├── ai/
-│       ├── customer/
-│       └── platform/
-│
-├── core/
-├── database/
-├── dependencies/
-├── middleware/
-├── models/
-├── repositories/
-├── schemas/
-├── security/
-├── services/
-├── utils/
-└── main.py
+Responsible for authentication and user identity.
 
-migrations/
+Owns
+
+- User Accounts
+- Passwords
+- Sessions
+- Refresh Tokens
+- Email Verification
+- Password Reset
+- JWT Generation
+- RSA Keys
+
+Never owns
+
+- Projects
+- API Keys
+- Billing
+- Analytics
+
+Database
+
+```
+Identity Database
 ```
 
 ---
 
-# Layer Responsibilities
+## Nativee API
 
-## API Layer
+Responsible for the business platform.
 
-Responsible for
+Owns
 
-- HTTP endpoints
-- Request validation
-- Response models
+- Business Users
+- Projects
+- API Keys
+- Plans
+- Usage
+- Analytics
+- Dashboard
+- Rate Limits
+- Engine Gateway
 
-Routes never contain business logic.
+Never owns
 
----
+- Passwords
+- Sessions
+- Authentication
+- Token Generation
 
-## Dependencies
+Database
 
-Responsible for
-
-- JWT authentication
-- API key authentication
-- Database sessions
-- Ownership validation
-
-Dependencies never contain business rules.
-
----
-
-## Services
-
-Responsible for
-
-- Business logic
-- Request orchestration
-- Platform workflows
-- Communication with Nativee Engine
-
-Current Services
-
-- AuthService
-- ProjectService
-- APIKeyService
-- UsageService
-- AnalyticsService
-- CustomerDashboardService
-- ProjectDashboardService
-- ConversationService
-
-Services never execute SQL directly.
+```
+Platform Database
+```
 
 ---
 
-## Repositories
+## Nativee Engine
 
-Responsible only for database operations.
+Responsible for AI execution.
 
-Current Repositories
+Owns
 
-- UserRepository
-- ProjectRepository
-- APIKeyRepository
-- UsageRepository
-- AnalyticsRepository
-- PlanRepository
+- Speech Recognition
+- Translation
+- Voice Synthesis
+- Streaming
+- AI Provider Management
+- Performance Benchmarking
 
-Repositories never contain business logic.
+Never owns
 
----
-
-## Schemas
-
-Responsible for API contracts.
-
-Examples
-
-- ConversationResponse
-- TranslateResponse
-- DashboardResponse
-- UsageSummaryResponse
-- AnalyticsResponse
-
-Schemas are shared between the API layer and clients.
+- Authentication
+- Users
+- Billing
+- Projects
 
 ---
 
-# Authentication Model
-
-Nativee separates customer identity from application identity.
-
-## Customer Authentication
+# Authentication Flow
 
 ```text
 User
+
+↓
+
+Nativee Identity
+
+↓
+
+Authenticate
+
+↓
+
+RS256 JWT
+
+↓
+
+Nativee API
+
+↓
+
+Verify Signature
+
+↓
+
+Resolve Business User
+
+↓
+
+Projects
+```
+
+Authentication is centralized inside Nativee Identity.
+
+Nativee API only verifies Identity-issued JWTs.
+
+---
+
+# Business User Flow
+
+```text
+Identity User
 
 ↓
 
@@ -184,21 +166,38 @@ JWT
 
 ↓
 
-Console APIs
+Nativee API
+
+↓
+
+Business User Exists?
+
+      │
+
+      ├── Yes
+
+      │
+
+      └── No
+
+           ↓
+
+Create Business User
+
+↓
+
+Assign Starter Plan
+
+↓
+
+Return User
 ```
 
-Supports
-
-- Dashboard
-- Projects
-- API Keys
-- Analytics
-- Usage
-- Billing
+This automatic provisioning is the foundation for platform onboarding.
 
 ---
 
-## API Authentication
+# AI Request Flow
 
 ```text
 Application
@@ -209,45 +208,35 @@ API Key
 
 ↓
 
-AI APIs
-```
-
-Supports
-
-- Conversation API
-- Translation API
-- Future AI APIs
-
----
-
-# Request Lifecycle
-
-```text
-Client
+Nativee API
 
 ↓
 
-Authentication
+Validate API Key
 
 ↓
 
-Ownership Validation
+Ownership Check
 
 ↓
 
-Rate Limiting
-
-↓
-
-API Route
-
-↓
-
-Business Service
+Rate Limit
 
 ↓
 
 Nativee Engine
+
+↓
+
+Speech
+
+↓
+
+Translation
+
+↓
+
+Voice
 
 ↓
 
@@ -258,157 +247,268 @@ Usage Logging
 Response
 ```
 
-The API delegates AI execution to Nativee Engine and records request metadata for analytics and billing.
-
 ---
 
-# API Surface
-
-## Customer APIs
+# Internal Layer Architecture
 
 ```text
-/v1/customer/auth
-/v1/customer/profile
-/v1/customer/projects
-/v1/customer/api-keys
-/v1/customer/dashboard
-/v1/customer/analytics
-/v1/customer/usage
+HTTP Request
+
+↓
+
+Middleware
+
+↓
+
+Dependencies
+
+↓
+
+API Routes
+
+↓
+
+Business Services
+
+↓
+
+Repositories
+
+↓
+
+PostgreSQL
 ```
 
 ---
 
-## AI APIs
+# Folder Structure
 
 ```text
-/v1/ai/conversation
-/v1/ai/translate
+app/
+
+├── api/
+│   ├── platform/
+│   │   ├── ai/
+│   │   └── console/
+│   │
+│   ├── client/
+│   └── legacy/
+│
+├── core/
+├── database/
+├── dependencies/
+├── middleware/
+├── models/
+├── repositories/
+├── schemas/
+│   ├── platform/
+│   ├── shared/
+│   └── client/
+│
+├── services/
+│   ├── platform/
+│   ├── shared/
+│   └── client/
+│
+├── utils/
+└── main.py
 ```
 
-These endpoints authenticate requests and forward execution to Nativee Engine.
+---
+
+# Layer Responsibilities
+
+## Middleware
+
+Responsible for
+
+- Request IDs
+- Logging
+- Timing
+- CORS
+- Error Handling
 
 ---
 
-## Platform APIs
+## Dependencies
 
-```text
-/v1/platform/plans
-/v1/platform/health
-/v1/platform/status
-/v1/platform/version
-```
+Responsible for
 
----
-
-# Engineering Principles
-
-- Layered Architecture
-- Repository Pattern
-- Service Layer
-- Thin API Layer
-- Dependency Injection
-- Project-based Multi-tenancy
-- Strong Ownership Validation
-- Separation of Platform and AI Runtime
-- Single Responsibility Principle
-
----
-
-# Platform Status
-
-## Foundation
-
-Completed
-
-- Layered Architecture
-- API Versioning
-- Repository Pattern
-- Service Layer
-- JWT Authentication
+- JWT Verification
 - API Key Authentication
-- Project Management
+- Database Sessions
+- Rate Limit Resolution
+- Identity Resolution
+
+Dependencies never contain business logic.
+
+---
+
+## API Layer
+
+Responsible for
+
+- HTTP Endpoints
+- Request Validation
+- Response Models
+
+Routes remain thin.
+
+---
+
+## Services
+
+Responsible for
+
+- Business Rules
+- Platform Workflows
+- Engine Communication
+- Resource Orchestration
+
+Services never execute SQL.
+
+---
+
+## Repositories
+
+Responsible only for
+
+- Create
+- Read
+- Update
+- Delete
+
+Repositories never contain business logic.
+
+---
+
+## Schemas
+
+Responsible for
+
+- Request Models
+- Response Models
+- Shared Contracts
+
+---
+
+# Security Model
+
+## Human Identity
+
+```text
+User
+
+↓
+
+Nativee Identity
+
+↓
+
+JWT
+
+↓
+
+Nativee API
+```
+
+Protected using RS256.
+
+---
+
+## Application Identity
+
+```text
+Developer
+
+↓
+
+API Key
+
+↓
+
+Nativee API
+
+↓
+
+Nativee Engine
+```
+
+Protected using hashed API Keys.
+
+---
+
+# Platform Principles
+
+- Service-Oriented Architecture
+- Repository Pattern
+- Service Layer
+- Dependency Injection
+- Multi-Tenant Isolation
+- Principle of Least Privilege
+- Separation of Authentication and Business Logic
+- Independent Deployments
+- Independent Databases
+- RS256 Authentication
+
+---
+
+# Current Platform Status
+
+## Completed
+
+- Nativee Identity
+- Nativee API
+- Nativee Engine
+- RS256 Authentication
+- Railway Deployment
+- API Keys
+- Plans
+- Projects
 - Usage Tracking
 - Analytics
-- Dashboard Foundation
-
----
-
-## Platform
-
-Completed
-
-- Projects
-- API Keys
-- Customer Dashboard
-- Project Dashboard
-- Usage Logging
-- Analytics
-- Rate Limiting
+- Dashboard
+- Engine Integration
 
 ---
 
 ## In Progress
 
+- Automatic Business User Provisioning
 - Developer Console
-- API Playground
 - SDKs
-- Billing
+- Billing Foundations
 
 ---
 
 ## Planned
 
 - Organizations
-- Team Management
+- Teams
+- Role-Based Access Control
 - Audit Logs
 - Webhooks
 - Enterprise Features
+- Marketplace Integrations
 
 ---
 
-# Design Principles
+# Design Philosophy
 
-Nativee is built around three architectural concepts.
+Nativee is built on three independent domains.
 
-## Human Identity
+```
+Identity
 
-Users authenticate with JWT to access the Nativee Console.
+↓
 
----
+Business Platform
 
-## Application Identity
+↓
 
-Applications authenticate with API Keys to access AI services.
-
----
-
-## Platform Isolation
-
-Every project owns its API keys, usage records, analytics, and billing data, providing secure multi-tenant isolation.
-
----
-
-# Relationship with Nativee Engine
-
-The Nativee API is the platform gateway.
-
-The Nativee Engine is an independent execution runtime.
-
-```text
-Client
-    │
-    ▼
-Nativee API
-    │
-    ▼
-Nativee Engine
-    │
-    ▼
-Speech Recognition
-Translation
-Speech Synthesis
-Benchmarking
-Streaming
+AI Runtime
 ```
 
-This separation allows the platform and the AI runtime to evolve independently while maintaining a stable public API.
+Each domain owns its own data, responsibilities, deployment pipeline, and release cycle.
+
+This separation allows Nativee to scale from a single developer to enterprise workloads while maintaining a clean, maintainable architecture.
