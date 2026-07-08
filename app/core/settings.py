@@ -57,7 +57,7 @@ TRANSLATION_PROVIDER = os.getenv(
 
 
 # ==========================================================
-# Nativeee Engine
+# Nativee Engine
 # ==========================================================
 
 ENGINE_URL = os.getenv(
@@ -67,27 +67,54 @@ ENGINE_URL = os.getenv(
 
 
 # ==========================================================
-# JWT
+# Identity Service
 # ==========================================================
 
-JWT_SECRET_KEY = os.getenv(
-    "JWT_SECRET_KEY",
+IDENTITY_URL = os.getenv(
+    "IDENTITY_URL",
+    "http://127.0.0.1:8000",
+).strip()
+
+
+# ==========================================================
+# Identity Security
+# ==========================================================
+
+IDENTITY_ISSUER = os.getenv(
+    "IDENTITY_ISSUER",
+    "http://127.0.0.1:8000",
+).strip()
+
+
+IDENTITY_AUDIENCE = os.getenv(
+    "IDENTITY_AUDIENCE",
+    "nativeee",
+).strip()
+
+
+IDENTITY_PUBLIC_KEY = os.getenv(
+    "IDENTITY_PUBLIC_KEY",
     "",
 ).strip()
 
-JWT_ALGORITHM = os.getenv(
-    "JWT_ALGORITHM",
-    "HS256",
+
+IDENTITY_ALGORITHM = os.getenv(
+    "IDENTITY_ALGORITHM",
+    "RS256",
 ).strip()
 
-JWT_EXPIRE_MINUTES = int(
-    os.getenv(
-        "JWT_EXPIRE_MINUTES",
-        "60",
-    )
-)
 
-if not JWT_SECRET_KEY:
-    raise RuntimeError(
-        "JWT_SECRET_KEY is missing. Please set it in your environment variables."
-    )
+# ==========================================================
+# Supabase
+# ==========================================================
+
+SUPABASE_URL = os.getenv(
+    "SUPABASE_URL",
+    "",
+).strip()
+
+
+SUPABASE_PROJECT_REF = os.getenv(
+    "SUPABASE_PROJECT_REF",
+    "",
+).strip()

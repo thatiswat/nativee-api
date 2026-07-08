@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from app.core.logger import logger
 from app.database.session import SessionLocal
 from app.engine.client import engine
-from app.services.plan_service import PlanService
+from app.services.platform.plans import PlanService
 
 
 @asynccontextmanager

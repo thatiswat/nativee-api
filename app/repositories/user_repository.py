@@ -38,6 +38,20 @@ class UserRepository:
             .first()
         )
 
+
+    def get_by_identity_id(
+        self,
+        identity_id: str,
+    ) -> User | None:
+        return (
+            self.db.query(User)
+            .filter(
+                User.identity_id == identity_id,
+            )
+            .first()
+        )
+
+
     def get_by_email(
         self,
         email: str,
@@ -47,6 +61,7 @@ class UserRepository:
             .filter(User.email == email)
             .first()
         )
+
 
     def get_all(
         self,

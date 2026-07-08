@@ -1,4 +1,10 @@
-from sqlalchemy import Boolean, Column, DateTime, Integer, String
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Integer,
+    String,
+)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -8,19 +14,55 @@ from app.database.base import Base
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True,
+    )
 
-    name = Column(String, nullable=False)
+    # Future Nativee Identity ID
+    identity_id = Column(
+        String,
+        unique=True,
+        nullable=True,
+        index=True,
+    )
 
-    email = Column(String, unique=True, index=True, nullable=False)
+    name = Column(
+        String,
+        nullable=False,
+    )
 
-    password_hash = Column(String, nullable=False)
+    email = Column(
+        String,
+        unique=True,
+        index=True,
+        nullable=False,
+    )
 
-    role = Column(String, nullable=False)
+    # --------------------------------------------------
+    # Temporary
+    # These will move to nativee-identity
+    # --------------------------------------------------
 
-    is_active = Column(Boolean, nullable=False)
+    password_hash = Column(
+        String,
+        nullable=False,
+    )
 
-    # ✅ Correct relationship name (must match Project.owner)
+    role = Column(
+        String,
+        nullable=False,
+    )
+
+    is_active = Column(
+        Boolean,
+        nullable=False,
+        default=True,
+    )
+
+    # --------------------------------------------------
+
     projects = relationship(
         "Project",
         back_populates="owner",

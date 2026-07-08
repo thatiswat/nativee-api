@@ -6,7 +6,8 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import FileResponse, ORJSONResponse
 
-from app.api.v1 import router as api_router
+from app.api.platform import router as developer_router
+from app.api.client import router as client_router
 from app.core.lifespan import lifespan
 from app.core.logger import logger
 from app.core.middleware import benchmark
@@ -14,7 +15,7 @@ from app.core.settings import (
     GROQ_API_KEY,
     UPLOAD_DIR,
 )
-from app.schemas.root import RootResponse
+from app.schemas.shared.root import RootResponse
 
 
 # ---------------------------------------------------------------------
@@ -83,7 +84,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 app.add_middleware(
     GZipMiddleware,
     minimum_size=1000,
@@ -110,7 +110,11 @@ async def benchmark_middleware(
 # ---------------------------------------------------------------------
 
 app.include_router(
-    api_router,
+    developer_router,
+)
+
+app.include_router(
+    client_router,
 )
 
 
@@ -157,7 +161,6 @@ async def get_audio(
             detail="Audio file not found",
         )
 
-
     async def cleanup():
 
         await asyncio.sleep(
@@ -168,11 +171,9 @@ async def get_audio(
             missing_ok=True,
         )
 
-
     asyncio.create_task(
         cleanup(),
     )
-
 
     return FileResponse(
         path=file_path,
@@ -190,7 +191,6 @@ def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
 
-
     schema = get_openapi(
         title=app.title,
         version=app.version,
@@ -198,12 +198,10 @@ def custom_openapi():
         routes=app.routes,
     )
 
-
     schema.setdefault(
         "components",
         {},
     )
-
 
     schema["components"]["securitySchemes"] = {
 
@@ -220,7 +218,6 @@ def custom_openapi():
         },
 
     }
-
 
     app.openapi_schema = schema
 
